@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'subjects',
+    'planning',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -90,6 +93,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
+    
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
