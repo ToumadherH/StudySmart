@@ -1,19 +1,11 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext } from 'react';
 import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
-    setLoading(false);
-  }, []);
+  const [user, setUser] = useState(() => authService.getCurrentUser());
+  const loading = false;
 
   const login = async (credentials) => {
     const data = await authService.login(credentials);
@@ -23,7 +15,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     const data = await authService.register(userData);
-    setUser(data.user);
     return data;
   };
 

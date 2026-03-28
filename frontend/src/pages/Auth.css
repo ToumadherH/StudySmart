@@ -82,6 +82,13 @@
   color: #c53030;
   font-size: 12px;
   margin-top: -4px;
+  display: block;
+  line-height: 1.4;
+}
+
+.field-error-label {
+  font-weight: 700;
+  color: #742a2a;
 }
 
 .auth-button {

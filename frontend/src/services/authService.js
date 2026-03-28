@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_URL = "http://localhost:8000/api/auth/";
+const API_ROOT = "http://localhost:8000/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -8,6 +9,11 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+function isCredentialRequest(config) {
+  const url = config?.url || "";
+  return /login\/?$/.test(url) || /register\/?$/.test(url);
+}
 
 // Add JWT token to requests if it exists
 api.interceptors.request.use(
@@ -29,13 +35,19 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const status = error.response?.status;
+    if (status === 401 && !originalRequest._retry) {
+      // Wrong password / invalid login also returns 401 — do not treat as "refresh needed"
+      if (isCredentialRequest(originalRequest)) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
         if (!refreshToken) {
-          throw new Error("No refresh token");
+          return Promise.reject(error);
         }
 
         const response = await axios.post(`${API_URL}refresh/`, {
@@ -48,7 +60,9 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
       } catch (refreshError) {
-        authService.logout();
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
         window.location.href = "/login";
         return Promise.reject(refreshError);
       }
@@ -61,11 +75,6 @@ api.interceptors.response.use(
 const authService = {
   register: async (userData) => {
     const response = await api.post("register/", userData);
-    if (response.data.access && response.data.refresh) {
-      localStorage.setItem("accessToken", response.data.access);
-      localStorage.setItem("refreshToken", response.data.refresh);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-    }
     return response.data;
   },
 
@@ -81,7 +90,19 @@ const authService = {
 
   logout: async () => {
     try {
-      await api.post("logout/");
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        await axios.post(
+          `${API_ROOT}/user/logout/`,
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+      }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {

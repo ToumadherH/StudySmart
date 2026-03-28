@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ErrorBanner from '../components/ErrorBanner';
+import { formatApiError } from '../utils/formatApiError';
 import './Auth.css';
 
 const Login = () => {
@@ -8,7 +10,7 @@ const Login = () => {
     username: '',
     password: '',
   });
-  const [error, setError] = useState('');
+  const [errorInfo, setErrorInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -22,14 +24,20 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrorInfo(null);
     setLoading(true);
 
     try {
       await login(formData);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+      setErrorInfo(
+        formatApiError(err, {
+          loginAttempt: true,
+          fallbackMessage: 'Sign-in failed. Please try again.',
+        }),
+      );
     } finally {
       setLoading(false);
     }
@@ -41,7 +49,13 @@ const Login = () => {
         <h1 className="auth-title">Welcome Back</h1>
         <p className="auth-subtitle">Sign in to continue to StudySmart</p>
 
-        {error && <div className="error-message">{error}</div>}
+        {errorInfo && (
+          <ErrorBanner
+            kind={errorInfo.kind}
+            summary={errorInfo.summary}
+            message={errorInfo.message}
+          />
+        )}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
