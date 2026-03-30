@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import ErrorBanner from '../components/ErrorBanner';
-import { formatApiError } from '../utils/formatApiError';
 import './Auth.css';
 
 const Login = () => {
@@ -10,7 +8,7 @@ const Login = () => {
     username: '',
     password: '',
   });
-  const [errorInfo, setErrorInfo] = useState(null);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -24,20 +22,18 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorInfo(null);
+    setError('');
     setLoading(true);
 
     try {
       await login(formData);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (err) {
       console.error('Login error:', err);
-      setErrorInfo(
-        formatApiError(err, {
-          loginAttempt: true,
-          fallbackMessage: 'Sign-in failed. Please try again.',
-        }),
-      );
+      const message = err.response?.data?.detail ||
+                      err.response?.data?.error ||
+                      'Invalid credentials. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -49,12 +45,10 @@ const Login = () => {
         <h1 className="auth-title">Welcome Back</h1>
         <p className="auth-subtitle">Sign in to continue to StudySmart</p>
 
-        {errorInfo && (
-          <ErrorBanner
-            kind={errorInfo.kind}
-            summary={errorInfo.summary}
-            message={errorInfo.message}
-          />
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -90,10 +84,6 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
       </div>
     </div>
   );
