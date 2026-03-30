@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
-import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
@@ -25,7 +25,7 @@ function RootRedirect() {
     );
   }
 
-  return isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
 }
 
 function App() {
@@ -36,14 +36,14 @@ function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
           <Route
-            path="/home"
+            path="/dashboard"
             element={
               <ProtectedRoute>
-                <Home />
+                <Dashboard />
               </ProtectedRoute>
             }
           />
-          {/* Catch-all route - redirect to home */}
+          {/* Catch-all route - redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
