@@ -13,11 +13,6 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const register = async (userData) => {
-    const data = await authService.register(userData);
-    return data;
-  };
-
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -26,7 +21,6 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
-    register,
     logout,
     isAuthenticated: !!user,
     loading,
