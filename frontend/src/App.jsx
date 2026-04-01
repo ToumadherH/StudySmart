@@ -7,7 +7,9 @@ import {
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
 import Subjects from "./pages/Subjects";
+import Calendar from "./pages/Calendar";
 import Statistics from "./pages/Statistics";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -27,7 +29,7 @@ function RootRedirect() {
     );
   }
 
-  return isAuthenticated ? <Navigate to="/subjects" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
 }
 
 function App() {
@@ -39,10 +41,26 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/subjects"
             element={
               <ProtectedRoute>
                 <Subjects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <Calendar />
               </ProtectedRoute>
             }
           />
@@ -56,7 +74,7 @@ function App() {
           />
           <Route
             path="/home"
-            element={<Navigate to="/subjects" replace />}
+            element={<Navigate to="/dashboard" replace />}
           />
           {/* Catch-all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
