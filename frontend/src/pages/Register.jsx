@@ -11,6 +11,7 @@ const Register = () => {
     password2: '',
   });
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
 
     if (formData.password !== formData.password2) {
       setError('Passwords do not match');
@@ -41,12 +43,20 @@ const Register = () => {
       navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
     } catch (err) {
       console.error('Registration error:', err);
-      const message = err.response?.data?.detail ||
-                      err.response?.data?.username?.[0] ||
-                      err.response?.data?.email?.[0] ||
-                      err.response?.data?.password?.[0] ||
-                      'Registration failed. Please try again.';
-      setError(message);
+      const data = err.response?.data;
+      if (data) {
+        const errors = {};
+        if (data.username) errors.username = data.username[0];
+        if (data.email) errors.email = data.email[0];
+        if (data.password) errors.password = data.password[0];
+        if (Object.keys(errors).length > 0) {
+          setFieldErrors(errors);
+        } else {
+          setError(data.detail || 'Registration failed. Please try again.');
+        }
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -77,6 +87,7 @@ const Register = () => {
               placeholder="Choose a username"
               autoComplete="username"
             />
+            {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
           </div>
 
           <div className="form-group">
@@ -91,6 +102,7 @@ const Register = () => {
               placeholder="Enter your email"
               autoComplete="email"
             />
+            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
           </div>
 
           <div className="form-group">
@@ -106,6 +118,7 @@ const Register = () => {
               autoComplete="new-password"
               minLength={8}
             />
+            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
           </div>
 
           <div className="form-group">
