@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
@@ -11,7 +11,10 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  const successMessage = location.state?.message;
 
   const handleChange = (e) => {
     setFormData({
@@ -44,6 +47,12 @@ const Login = () => {
       <div className="auth-card">
         <h1 className="auth-title">Welcome Back</h1>
         <p className="auth-subtitle">Sign in to continue to StudySmart</p>
+
+        {successMessage && (
+          <div className="success-message">
+            {successMessage}
+          </div>
+        )}
 
         {error && (
           <div className="error-message">
@@ -84,6 +93,10 @@ const Login = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <p className="auth-footer">
+          Don't have an account? <Link to="/register">Sign up</Link>
+        </p>
       </div>
     </div>
   );
