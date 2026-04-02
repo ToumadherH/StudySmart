@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
-import './Calendar.css';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
+import "./Calendar.css";
 
 const Calendar = () => {
   const { logout } = useAuth();
@@ -23,8 +23,8 @@ const Calendar = () => {
     try {
       setLoading(true);
       const [sessionsRes, subjectsRes] = await Promise.all([
-        api.get('/sessions/').catch(() => ({ data: { results: [] } })),
-        api.get('/subjects/').catch(() => ({ data: { results: [] } })),
+        api.get("/sessions/").catch(() => ({ data: { results: [] } })),
+        api.get("/subjects/").catch(() => ({ data: { results: [] } })),
       ]);
 
       const sessionsData = sessionsRes.data.results || sessionsRes.data || [];
@@ -33,41 +33,42 @@ const Calendar = () => {
       setSubjects(subjectsData);
 
       // Convert sessions to FullCalendar events
-      const sessionEvents = sessionsData.map(session => {
-        const subject = subjectsData.find(s => s.id === session.subject);
+      const sessionEvents = sessionsData.map((session) => {
+        const subject = subjectsData.find((s) => s.id === session.subject);
+        const isCompleted = session.status === "completed";
         return {
           id: `session-${session.id}`,
-          title: subject?.name || 'Study Session',
+          title: subject?.name || "Study Session",
           start: session.start_time,
           end: session.end_time,
-          backgroundColor: session.is_completed ? '#48bb78' : '#667eea',
-          borderColor: session.is_completed ? '#38a169' : '#5a67d8',
+          backgroundColor: isCompleted ? "#48bb78" : "#667eea",
+          borderColor: isCompleted ? "#38a169" : "#5a67d8",
           extendedProps: {
-            type: 'session',
+            type: "session",
             sessionId: session.id,
             subjectId: session.subject,
-            isCompleted: session.is_completed,
+            status: session.status,
           },
         };
       });
 
       // Add exam dates as events
-      const examEvents = subjectsData.map(subject => ({
+      const examEvents = subjectsData.map((subject) => ({
         id: `exam-${subject.id}`,
         title: `📝 ${subject.name} Exam`,
         start: subject.exam_date,
         allDay: true,
-        backgroundColor: '#e53e3e',
-        borderColor: '#c53030',
+        backgroundColor: "#e53e3e",
+        borderColor: "#c53030",
         extendedProps: {
-          type: 'exam',
+          type: "exam",
           subjectId: subject.id,
         },
       }));
 
       setEvents([...sessionEvents, ...examEvents]);
     } catch (err) {
-      console.error('Failed to fetch calendar data:', err);
+      console.error("Failed to fetch calendar data:", err);
     } finally {
       setLoading(false);
     }
@@ -84,16 +85,18 @@ const Calendar = () => {
   };
 
   const handleToggleComplete = async () => {
-    if (!selectedEvent || selectedEvent.type !== 'session') return;
+    if (!selectedEvent || selectedEvent.type !== "session") return;
 
     try {
+      const newStatus =
+        selectedEvent.status === "completed" ? "planned" : "completed";
       await api.patch(`/sessions/${selectedEvent.sessionId}/`, {
-        is_completed: !selectedEvent.isCompleted,
+        status: newStatus,
       });
       fetchCalendarData();
       setSelectedEvent(null);
     } catch (err) {
-      console.error('Failed to update session:', err);
+      console.error("Failed to update session:", err);
     }
   };
 
@@ -123,10 +126,19 @@ const Calendar = () => {
         </div>
         <div className="header-right">
           <nav className="calendar-nav">
-            <Link to="/dashboard" className="nav-link">Dashboard</Link>
-            <Link to="/subjects" className="nav-link">Subjects</Link>
+            <Link to="/dashboard" className="nav-link">
+              Dashboard
+            </Link>
+            <Link to="/planning" className="nav-link">
+              Planning
+            </Link>
+            <Link to="/subjects" className="nav-link">
+              Subjects
+            </Link>
           </nav>
-          <button onClick={handleLogout} className="logout-btn">Logout</button>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
         </div>
       </header>
 
@@ -151,9 +163,9 @@ const Calendar = () => {
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay',
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             events={events}
             eventClick={handleEventClick}
@@ -170,48 +182,62 @@ const Calendar = () => {
           <div className="event-modal" onClick={(e) => e.stopPropagation()}>
             <div className="event-modal-header">
               <h3>{selectedEvent.title}</h3>
-              <button className="close-btn" onClick={closeModal}>&times;</button>
+              <button className="close-btn" onClick={closeModal}>
+                &times;
+              </button>
             </div>
             <div className="event-modal-body">
               <p>
-                <strong>Date:</strong>{' '}
-                {selectedEvent.start?.toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                <strong>Date:</strong>{" "}
+                {selectedEvent.start?.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
-              {selectedEvent.type === 'session' && selectedEvent.end && (
+              {selectedEvent.type === "session" && selectedEvent.end && (
                 <p>
-                  <strong>Time:</strong>{' '}
-                  {selectedEvent.start?.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}{' '}
-                  -{' '}
-                  {selectedEvent.end?.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
+                  <strong>Time:</strong>{" "}
+                  {selectedEvent.start?.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {selectedEvent.end?.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </p>
               )}
-              {selectedEvent.type === 'session' && (
+              {selectedEvent.type === "session" && (
                 <p>
-                  <strong>Status:</strong>{' '}
-                  <span className={selectedEvent.isCompleted ? 'status-completed' : 'status-pending'}>
-                    {selectedEvent.isCompleted ? 'Completed' : 'Pending'}
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={
+                      selectedEvent.status === "completed"
+                        ? "status-completed"
+                        : "status-pending"
+                    }
+                  >
+                    {selectedEvent.status === "completed"
+                      ? "Completed"
+                      : selectedEvent.status === "in_progress"
+                        ? "In Progress"
+                        : "Planned"}
                   </span>
                 </p>
               )}
             </div>
-            {selectedEvent.type === 'session' && (
+            {selectedEvent.type === "session" && (
               <div className="event-modal-footer">
                 <button
-                  className={`toggle-btn ${selectedEvent.isCompleted ? 'mark-incomplete' : 'mark-complete'}`}
+                  className={`toggle-btn ${selectedEvent.status === "completed" ? "mark-incomplete" : "mark-complete"}`}
                   onClick={handleToggleComplete}
                 >
-                  {selectedEvent.isCompleted ? 'Mark as Incomplete' : 'Mark as Complete'}
+                  {selectedEvent.status === "completed"
+                    ? "Mark as Incomplete"
+                    : "Mark as Complete"}
                 </button>
               </div>
             )}

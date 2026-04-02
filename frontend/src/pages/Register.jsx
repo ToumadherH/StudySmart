@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import authService from '../services/authService';
-import './Auth.css';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import authService from "../services/authService";
+import "./Auth.css";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    password2: '',
+    username: "",
+    email: "",
+    password: "",
+    password2: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,11 +24,11 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setFieldErrors({});
 
     if (formData.password !== formData.password2) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
@@ -39,10 +39,13 @@ const Register = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        password2: formData.password2,
       });
-      navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
+      navigate("/login", {
+        state: { message: "Registration successful! Please log in." },
+      });
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error("Registration error:", err);
       const data = err.response?.data;
       if (data) {
         const errors = {};
@@ -52,10 +55,10 @@ const Register = () => {
         if (Object.keys(errors).length > 0) {
           setFieldErrors(errors);
         } else {
-          setError(data.detail || 'Registration failed. Please try again.');
+          setError(data.detail || "Registration failed. Please try again.");
         }
       } else {
-        setError('Registration failed. Please try again.');
+        setError("Registration failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -68,11 +71,7 @@ const Register = () => {
         <h1 className="auth-title">Create Account</h1>
         <p className="auth-subtitle">Join StudySmart today</p>
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
@@ -87,7 +86,9 @@ const Register = () => {
               placeholder="Choose a username"
               autoComplete="username"
             />
-            {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
+            {fieldErrors.username && (
+              <span className="field-error">{fieldErrors.username}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -102,7 +103,9 @@ const Register = () => {
               placeholder="Enter your email"
               autoComplete="email"
             />
-            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
+            {fieldErrors.email && (
+              <span className="field-error">{fieldErrors.email}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -118,7 +121,9 @@ const Register = () => {
               autoComplete="new-password"
               minLength={8}
             />
-            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+            {fieldErrors.password && (
+              <span className="field-error">{fieldErrors.password}</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -136,7 +141,7 @@ const Register = () => {
           </div>
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 

@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Subjects from "./pages/Subjects";
 import Calendar from "./pages/Calendar";
+import PlanningPage from "./pages/PlanningPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
@@ -19,16 +20,24 @@ function RootRedirect() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>Loading...</div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        Loading...
+      </div>
     );
   }
 
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
 }
 
 function App() {
@@ -64,9 +73,14 @@ function App() {
             }
           />
           <Route
-            path="/home"
-            element={<Navigate to="/dashboard" replace />}
+            path="/planning"
+            element={
+              <ProtectedRoute>
+                <PlanningPage />
+              </ProtectedRoute>
+            }
           />
+          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
           {/* Catch-all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
