@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.utils import timezone
 from subjects.models import Subject
 from study_sessions.models import Session
@@ -10,7 +10,7 @@ def calculate_planning_score(subject, base_date=None):
         base_date = timezone.now()
 
     # Convert exam_date to datetime  if it's a date
-    exam_datetime = datetime.combine(subject.exam_date, datetime.min.time()) if isinstance(subject.exam_date, (datetime.date, type(None))) else subject.exam_date
+    exam_datetime = datetime.combine(subject.exam_date, datetime.min.time()) if isinstance(subject.exam_date, (date, type(None))) else subject.exam_date
     exam_datetime = timezone.make_aware(exam_datetime) if exam_datetime else None
 
     # If no exam date, use 30 days as default
