@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
-import api from '../services/api';
-import SubjectCard from '../components/SubjectCard';
-import SubjectModal from '../components/SubjectModal';
-import './Subjects.css';
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
+import api from "../services/api";
+import SubjectCard from "../components/SubjectCard";
+import SubjectModal from "../components/SubjectModal";
+import "./Subjects.css";
 
 const Subjects = () => {
   const { logout } = useAuth();
@@ -21,11 +21,11 @@ const Subjects = () => {
   const fetchSubjects = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/subjects/');
+      const response = await api.get("/subjects/");
       setSubjects(response.data.results || response.data || []);
     } catch (err) {
-      console.error('Failed to fetch subjects:', err);
-      setError('Failed to load subjects');
+      console.error("Failed to fetch subjects:", err);
+      setError("Failed to load subjects");
     } finally {
       setLoading(false);
     }
@@ -42,30 +42,36 @@ const Subjects = () => {
   };
 
   const handleDeleteSubject = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this subject?')) return;
+    if (!window.confirm("Are you sure you want to delete this subject?"))
+      return;
 
     try {
       await api.delete(`/subjects/${id}/`);
-      setSubjects(subjects.filter(s => s.id !== id));
+      setSubjects(subjects.filter((s) => s.id !== id));
     } catch (err) {
-      console.error('Failed to delete subject:', err);
-      setError('Failed to delete subject');
+      console.error("Failed to delete subject:", err);
+      setError("Failed to delete subject");
     }
   };
 
   const handleSaveSubject = async (subjectData) => {
     try {
       if (editingSubject) {
-        const response = await api.patch(`/subjects/${editingSubject.id}/`, subjectData);
-        setSubjects(subjects.map(s => s.id === editingSubject.id ? response.data : s));
+        const response = await api.patch(
+          `/subjects/${editingSubject.id}/`,
+          subjectData,
+        );
+        setSubjects(
+          subjects.map((s) => (s.id === editingSubject.id ? response.data : s)),
+        );
       } else {
-        const response = await api.post('/subjects/', subjectData);
+        const response = await api.post("/subjects/", subjectData);
         setSubjects([...subjects, response.data]);
       }
       setIsModalOpen(false);
       setEditingSubject(null);
     } catch (err) {
-      console.error('Failed to save subject:', err);
+      console.error("Failed to save subject:", err);
       throw err;
     }
   };
@@ -92,10 +98,19 @@ const Subjects = () => {
         </div>
         <div className="header-right">
           <nav className="subjects-nav">
-            <Link to="/dashboard" className="nav-link">Dashboard</Link>
-            <Link to="/calendar" className="nav-link">Calendar</Link>
+            <Link to="/dashboard" className="nav-link">
+              Dashboard
+            </Link>
+            <Link to="/planning" className="nav-link">
+              Planning
+            </Link>
+            <Link to="/calendar" className="nav-link">
+              Calendar
+            </Link>
           </nav>
-          <button onClick={handleLogout} className="logout-btn">Logout</button>
+          <button onClick={handleLogout} className="logout-btn">
+            Logout
+          </button>
         </div>
       </header>
 
@@ -103,7 +118,9 @@ const Subjects = () => {
 
       <main className="subjects-content">
         <div className="subjects-toolbar">
-          <h2>{subjects.length} Subject{subjects.length !== 1 ? 's' : ''}</h2>
+          <h2>
+            {subjects.length} Subject{subjects.length !== 1 ? "s" : ""}
+          </h2>
           <button onClick={handleAddSubject} className="add-btn">
             + Add Subject
           </button>
@@ -118,7 +135,7 @@ const Subjects = () => {
           </div>
         ) : (
           <div className="subjects-grid">
-            {subjects.map(subject => (
+            {subjects.map((subject) => (
               <SubjectCard
                 key={subject.id}
                 subject={subject}
