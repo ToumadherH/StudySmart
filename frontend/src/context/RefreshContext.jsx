@@ -6,7 +6,11 @@ export const RefreshProvider = ({ children }) => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const triggerRefresh = useCallback(() => {
-    setRefreshKey((prev) => prev + 1);
+    console.log("🔄 Refresh triggered!");
+    const newKey = Date.now();
+    setRefreshKey(newKey);
+    // Store in sessionStorage so Dashboard knows to refresh even if not mounted
+    sessionStorage.setItem("needsDashboardRefresh", "true");
   }, []);
 
   return (

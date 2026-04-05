@@ -19,8 +19,19 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("📊 Dashboard: refreshKey changed to", refreshKey);
     fetchDashboardData();
   }, [refreshKey]);
+
+  // Also check on mount if there's a pending refresh from sessionStorage
+  useEffect(() => {
+    const needsRefresh = sessionStorage.getItem("needsDashboardRefresh");
+    if (needsRefresh) {
+      console.log("📊 Dashboard: Found pending refresh in sessionStorage");
+      sessionStorage.removeItem("needsDashboardRefresh");
+      fetchDashboardData();
+    }
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
