@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useRefresh } from "../context/RefreshContext";
 import api from "../services/api";
 import "./Dashboard.css";
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const { refreshKey } = useRefresh();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalSubjects: 0,
@@ -18,7 +20,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [refreshKey]);
 
   const fetchDashboardData = async () => {
     try {
