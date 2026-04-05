@@ -34,11 +34,11 @@ const Calendar = () => {
 
       // Convert sessions to FullCalendar events
       const sessionEvents = sessionsData.map((session) => {
-        const subject = subjectsData.find((s) => s.id === session.subject);
+        const subjectName = session.subject?.name || "Study Session";
         const isCompleted = session.status === "completed";
         return {
           id: `session-${session.id}`,
-          title: subject?.name || "Study Session",
+          title: subjectName,
           start: session.start_time,
           end: session.end_time,
           backgroundColor: isCompleted ? "#48bb78" : "#667eea",
@@ -46,7 +46,7 @@ const Calendar = () => {
           extendedProps: {
             type: "session",
             sessionId: session.id,
-            subjectId: session.subject,
+            subjectId: session.subject?.id,
             status: session.status,
           },
         };
