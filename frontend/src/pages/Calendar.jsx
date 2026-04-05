@@ -5,11 +5,13 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useAuth } from "../context/AuthContext";
+import { useRefresh } from "../context/RefreshContext";
 import api from "../services/api";
 import "./Calendar.css";
 
 const Calendar = () => {
   const { logout } = useAuth();
+  const { triggerRefresh } = useRefresh();
   const [events, setEvents] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +96,7 @@ const Calendar = () => {
         status: newStatus,
       });
       fetchCalendarData();
+      triggerRefresh();
       setSelectedEvent(null);
     } catch (err) {
       console.error("Failed to update session:", err);
