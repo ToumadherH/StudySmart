@@ -30,12 +30,17 @@ def calculate_planning_score(subject, base_date=None):
     return score, days_until_exam
 
 
-def generate_planning(user, weeks=2, sessions_per_week=10):
+def generate_planning(user, weeks=2, sessions_per_week=10, clear_existing=True):
     """
     Generate smart planning for a user
     - More difficult subjects get more sessions
     - Closer exams get higher priority
+    - clear_existing: If True, deletes old sessions before generating new ones
     """
+    # Delete old sessions if clear_existing is True
+    if clear_existing:
+        Session.objects.filter(user=user).delete()
+
     subjects = user.subjects.all()
 
     if not subjects:
