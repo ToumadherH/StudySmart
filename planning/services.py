@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import random
 from django.utils import timezone
 from subjects.models import Subject
 from study_sessions.models import Session
@@ -10,7 +11,7 @@ def calculate_planning_score(subject, base_date=None):
         base_date = timezone.now()
 
     # Convert exam_date to datetime  if it's a date
-    exam_datetime = datetime.combine(subject.exam_date, datetime.min.time()) if isinstance(subject.exam_date, (datetime.date, type(None))) else subject.exam_date
+    exam_datetime = datetime.combine(subject.exam_date, datetime.min.time()) if isinstance(subject.exam_date, (date, type(None))) else subject.exam_date
     exam_datetime = timezone.make_aware(exam_datetime) if exam_datetime else None
 
     # If no exam date, use 30 days as default
@@ -29,12 +30,17 @@ def calculate_planning_score(subject, base_date=None):
     return score, days_until_exam
 
 
-def generate_planning(user, weeks=2, sessions_per_week=10):
+def generate_planning(user, weeks=2, sessions_per_week=10, clear_existing=True):
     """
     Generate smart planning for a user
     - More difficult subjects get more sessions
     - Closer exams get higher priority
+    - clear_existing: If True, deletes old sessions before generating new ones
     """
+    # Delete old sessions if clear_existing is True
+    if clear_existing:
+        Session.objects.filter(user=user).delete()
+
     subjects = user.subjects.all()
 
     if not subjects:
@@ -72,39 +78,73 @@ def generate_planning(user, weeks=2, sessions_per_week=10):
         total_sessions_available = sessions_per_week * weeks
         sessions_for_subject = max(int((score / total_score) * total_sessions_available), 2)  # At least 2 sessions
 
-        # Create sessions spread across the weeks
+        # Create sessions spread across the weeks with improved scheduling
         session_duration = 60  # 60 minutes default
+
+        # Define available time slots (realistic study times)
+        time_slots = [9, 10, 11, 13, 14, 15, 17, 18, 19]  # 9AM-11AM, 1PM-3PM, 5PM-7PM
+        weekdays = [0, 1, 2, 3, 4]  # Monday-Friday only
+
+        # Determine cutoff date: sessions must be BEFORE exam date
+        exam_date = subject.exam_date
+        if exam_date:
+            exam_datetime = datetime.combine(exam_date, datetime.min.time())
+            exam_datetime = timezone.make_aware(exam_datetime)
+            cutoff_date = exam_datetime
+        else:
+            cutoff_date = base_date + timedelta(weeks=weeks)
+
+        # Generate available slots ONLY before the cutoff date
+        available_slots = []
+        current_date = base_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        while current_date.date() < cutoff_date.date():
+            weekday = current_date.weekday()
+            if weekday in weekdays:  # Only weekdays
+                for hour in time_slots:
+                    slot_time = current_date.replace(hour=hour, minute=0, second=0)
+                    if slot_time < cutoff_date:  # Must be before exam
+                        available_slots.append(slot_time)
+            current_date += timedelta(days=1)
+
+        # Shuffle to randomize schedule
+        random.shuffle(available_slots)
+
+        # Create sessions from available slots
         sessions_created = 0
-
-        for week in range(weeks):
-            for day in range(7):
-                if sessions_created >= sessions_for_subject:
-                    break
-
-                # Random hour between 9 AM and 8 PM
-                random_hour = 9 + (sessions_created % 11)
-                session_date = base_date + timedelta(weeks=week, days=day, hours=random_hour)
-
-                # Check if session doesn't already exist at this time
-                existing = Session.objects.filter(
-                    user=user,
-                    subject=subject,
-                    start_time=session_date
-                ).exists()
-
-                if not existing:
-                    Session.objects.create(
-                        user=user,
-                        subject=subject,
-                        start_time=session_date,
-                        duration_minutes=session_duration,
-                        status='planned',
-                    )
-                    sessions_created += 1
-                    total_sessions_created += 1
-
+        for slot_time in available_slots:
             if sessions_created >= sessions_for_subject:
                 break
+
+            # Check 1: No session at this time from ANY subject (time conflict)
+            time_conflict = Session.objects.filter(
+                user=user,
+                start_time=slot_time
+            ).exists()
+
+            if time_conflict:
+                continue
+
+            # Check 2: Subject already has session on this day (one session per day per subject)
+            same_day_session = Session.objects.filter(
+                user=user,
+                subject=subject,
+                start_time__date=slot_time.date()
+            ).exists()
+
+            if same_day_session:
+                continue
+
+            # All checks passed, create session
+            Session.objects.create(
+                user=user,
+                subject=subject,
+                start_time=slot_time,
+                duration_minutes=session_duration,
+                status='planned',
+            )
+            sessions_created += 1
+            total_sessions_created += 1
 
         if sessions_created > 0:
             created_sessions_by_subject.append({
@@ -118,6 +158,90 @@ def generate_planning(user, weeks=2, sessions_per_week=10):
         'total_sessions_created': total_sessions_created,
         'by_subject': created_sessions_by_subject,
     }
+
+
+def generate_sessions_for_subject(user, subject, weeks=2, sessions_per_week=2):
+    """
+    Generate sessions for a single subject without affecting existing subjects.
+    Used by the auto-generate signal when a new subject is created.
+    """
+    # Calculate score for this subject
+    score, days_until = calculate_planning_score(subject)
+
+    # Sessions for this subject
+    total_sessions_available = sessions_per_week * weeks
+    sessions_for_subject = max(int(total_sessions_available), 2)
+
+    # Create sessions spread across the weeks with improved scheduling
+    session_duration = 60  # 60 minutes default
+
+    # Define available time slots (realistic study times)
+    time_slots = [9, 10, 11, 13, 14, 15, 17, 18, 19]  # 9AM-11AM, 1PM-3PM, 5PM-7PM
+    weekdays = [0, 1, 2, 3, 4]  # Monday-Friday only
+
+    base_date = timezone.now()
+
+    # Determine cutoff date: sessions must be BEFORE exam date
+    exam_date = subject.exam_date
+    if exam_date:
+        exam_datetime = datetime.combine(exam_date, datetime.min.time())
+        exam_datetime = timezone.make_aware(exam_datetime)
+        cutoff_date = exam_datetime
+    else:
+        cutoff_date = base_date + timedelta(weeks=weeks)
+
+    # Generate available slots ONLY before the cutoff date
+    available_slots = []
+    current_date = base_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    while current_date.date() < cutoff_date.date():
+        weekday = current_date.weekday()
+        if weekday in weekdays:  # Only weekdays
+            for hour in time_slots:
+                slot_time = current_date.replace(hour=hour, minute=0, second=0)
+                if slot_time < cutoff_date:  # Must be before exam
+                    available_slots.append(slot_time)
+        current_date += timedelta(days=1)
+
+    # Shuffle to randomize schedule
+    random.shuffle(available_slots)
+
+    # Create sessions from available slots
+    sessions_created = 0
+    for slot_time in available_slots:
+        if sessions_created >= sessions_for_subject:
+            break
+
+        # Check 1: No session at this time from ANY subject (time conflict)
+        time_conflict = Session.objects.filter(
+            user=user,
+            start_time=slot_time
+        ).exists()
+
+        if time_conflict:
+            continue
+
+        # Check 2: Subject already has session on this day (one session per day per subject)
+        same_day_session = Session.objects.filter(
+            user=user,
+            subject=subject,
+            start_time__date=slot_time.date()
+        ).exists()
+
+        if same_day_session:
+            continue
+
+        # All checks passed, create session
+        Session.objects.create(
+            user=user,
+            subject=subject,
+            start_time=slot_time,
+            duration_minutes=session_duration,
+            status='planned',
+        )
+        sessions_created += 1
+
+    return sessions_created
 
 
 def get_dashboard_stats(user):
