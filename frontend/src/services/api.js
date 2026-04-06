@@ -1,27 +1,29 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_URL = "http://localhost:8000/api";
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Add JWT token to requests
+// Add JWT token to requests if it exists
 api.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('accessToken');
+    const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Handle token refresh on 401
+// Handle token refresh on 401 response
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -31,24 +33,26 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('No refresh token');
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          throw new Error("No refresh token");
+        }
 
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
+        const response = await axios.post(`${API_URL}/auth/refresh/`, {
           refresh: refreshToken,
         });
 
         const { access } = response.data;
-        localStorage.setItem('accessToken', access);
-        originalRequest.headers.Authorization = `Bearer ${access}`;
+        localStorage.setItem("accessToken", access);
 
+        originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
-      } catch (err) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(err);
+      } catch (refreshError) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
       }
     }
 
