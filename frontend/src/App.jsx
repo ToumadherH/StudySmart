@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Subjects from "./pages/Subjects";
 import Calendar from "./pages/Calendar";
+import Statistics from "./pages/Statistics";
 import PlanningPage from "./pages/PlanningPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
@@ -69,6 +70,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Calendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/statistics"
+            element={
+              <ProtectedRoute>
+                <Statistics />
               </ProtectedRoute>
             }
           />
