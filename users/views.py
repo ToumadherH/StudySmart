@@ -46,6 +46,19 @@ class UserViewSet(viewsets.ViewSet):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['patch'])
+    def update_me(self, request):
+        """Update current authenticated user's profile"""
+        serializer = UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['post'])
     def logout(self, request):
         """Logout endpoint (stateless with JWT)"""

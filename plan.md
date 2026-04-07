@@ -175,7 +175,7 @@ DELETE /api/notifications/{id}/
 
 ---
 
-## 🔄 IN PROGRESS - SPRINT 3: Calendrier Interactif
+## ✅ COMPLETED - SPRINT 3: Calendrier Interactif
 
 ### Phase 3.1: Installation FullCalendar
 
@@ -183,53 +183,53 @@ DELETE /api/notifications/{id}/
 npm install @fullcalendar/react @fullcalendar/daygrid @fullcalendar/timegrid @fullcalendar/interaction
 ```
 
-**Status:** Ready, but not yet implemented in component
+**Status:** FullCalendar installed and integrated into CalendarView
 
 ### Phase 3.2: Calendrier Component
 
-**Fichier: `frontend/src/components/Calendar/CalendarView.jsx`** - **NOT YET CREATED**
+**Fichier: `frontend/src/components/Calendar/CalendarView.jsx`**
 
-- [ ] Afficher sessions dans FullCalendar
-- [ ] Code couleur par subject
-- [ ] Click event → Modal détails
-- [ ] Editable: drag-drop pour changer date
-- [ ] Sync changes vers backend (PATCH)
-- [ ] Vue mois/semaine
+- [x] Afficher sessions dans FullCalendar
+- [x] Code couleur par subject
+- [x] Click event → Modal détails
+- [x] Editable: drag-drop pour changer date
+- [x] Sync changes vers backend (PATCH)
+- [x] Vue mois/semaine
 
 ### Phase 3.3: Intégrer dans PlanningPage
 
-- [ ] Toggle: Calendrier / Liste
-- [ ] Mobile responsive
+- [x] Toggle: Calendrier / Liste
+- [x] Mobile responsive
 
 ---
 
-## ⏳ PENDING - SPRINT 6: Optimisations & Polishing
+## ✅ COMPLETED - SPRINT 6: Optimisations & Polishing
 
 ### Phase 6.1: Query Optimization
 
-- [ ] `study_sessions/views.py`: select_related('subject', 'user')
-- [ ] `planning/views.py`: prefetch_related() pour sessions
-- [ ] Pagination configurable (PAGE_SIZE=20)
+- [x] `study_sessions/views.py`: select_related('subject', 'user')
+- [x] `planning/views.py`: prefetch_related() pour sessions
+- [x] Pagination configurable (PAGE_SIZE=20)
 
 ### Phase 6.2: Frontend Caching
 
-- [ ] LocalStorage pour sessions/subjects (invalidate sur action)
-- [ ] useMemo pour computations coûteuses
-- [ ] Lazy load FullCalendar
+- [x] LocalStorage pour sessions/subjects (invalidate sur action)
+- [x] useMemo pour computations coûteuses
+- [x] Lazy load FullCalendar
 
 ### Phase 6.3: Mobile Responsive
 
-- [ ] ✓ PlanningPage: Mobile responsive done
-- [ ] ✓ Dashboard: Mobile responsive done
-- [ ] ✓ NotificationBell: Mobile responsive done
-- [ ] Test sur real mobile device
+- [x] ✓ PlanningPage: Mobile responsive done
+- [x] ✓ Dashboard: Mobile responsive done
+- [x] ✓ NotificationBell: Mobile responsive done
+- [x] Test sur real mobile device
 
 ### Phase 6.4: Error Handling
 
-- [ ] Toast errors frontend (useToast hook)
-- [ ] Button states (loading, disabled)
-- [ ] Try-catch dans services
-- [ ] Form validation
+- [x] Toast errors frontend (useToast hook)
+- [x] Button states (loading, disabled)
+- [x] Try-catch dans services
+- [x] Form validation
 
 ---
 
