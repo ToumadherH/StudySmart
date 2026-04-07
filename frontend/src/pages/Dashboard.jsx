@@ -94,6 +94,9 @@ const Dashboard = () => {
           <button className="nav-btn" onClick={() => navigate("/calendar")}>
             Calendar
           </button>
+          <button className="nav-btn" onClick={() => navigate("/profile")}>
+            Profile
+          </button>
           <button className="nav-btn logout-btn" onClick={handleLogout}>
             Logout
           </button>
