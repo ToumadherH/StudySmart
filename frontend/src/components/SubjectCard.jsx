@@ -1,22 +1,23 @@
-import './SubjectCard.css';
+import Button from "./ui/Button";
 
 const SubjectCard = ({ subject, onEdit, onDelete }) => {
   const getDifficultyLabel = (level) => {
-    const labels = ['', 'Easy', 'Medium', 'Moderate', 'Hard', 'Very Hard'];
-    return labels[level] || 'Unknown';
+    const labels = ["", "Easy", "Medium", "Moderate", "Hard", "Very hard"];
+    return labels[level] || "Unknown";
   };
 
-  const getDifficultyColor = (level) => {
-    const colors = ['', '#48bb78', '#38b2ac', '#ed8936', '#e53e3e', '#9b2c2c'];
-    return colors[level] || '#718096';
+  const getDifficultyClass = (level) => {
+    if (level <= 2) return "bg-ss-success/20 text-ss-highlight";
+    if (level === 3) return "bg-ss-accent/20 text-ss-highlight";
+    return "bg-ss-danger/20 text-ss-highlight";
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -31,39 +32,36 @@ const SubjectCard = ({ subject, onEdit, onDelete }) => {
   const daysRemaining = getDaysRemaining(subject.exam_date);
 
   return (
-    <div className="subject-card">
-      <div className="subject-card-header">
-        <h3 className="subject-name">{subject.name}</h3>
-        <span
-          className="difficulty-badge"
-          style={{ backgroundColor: getDifficultyColor(subject.difficulty) }}
-        >
+    <article className="rounded-2xl border border-ss-border bg-ss-surface/35 p-5 shadow-soft">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <h3 className="m-0 text-lg font-semibold text-ss-highlight">{subject.name}</h3>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getDifficultyClass(subject.difficulty)}`}>
           {getDifficultyLabel(subject.difficulty)}
         </span>
       </div>
 
-      <div className="subject-card-body">
-        <div className="subject-info">
-          <span className="info-label">Exam Date</span>
-          <span className="info-value">{formatDate(subject.exam_date)}</span>
+      <div className="mb-5 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-ss-muted">Exam date</span>
+          <span className="text-sm font-semibold text-ss-text">{formatDate(subject.exam_date)}</span>
         </div>
-        <div className="subject-info">
-          <span className="info-label">Days Remaining</span>
-          <span className={`info-value ${daysRemaining <= 7 ? 'urgent' : ''}`}>
-            {daysRemaining > 0 ? `${daysRemaining} days` : 'Past due'}
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-ss-muted">Days remaining</span>
+          <span className={`text-sm font-semibold ${daysRemaining <= 7 ? "text-ss-danger" : "text-ss-accent"}`}>
+            {daysRemaining > 0 ? `${daysRemaining} days` : "Past due"}
           </span>
         </div>
       </div>
 
-      <div className="subject-card-actions">
-        <button onClick={() => onEdit(subject)} className="edit-btn">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Button variant="secondary" onClick={() => onEdit(subject)}>
           Edit
-        </button>
-        <button onClick={() => onDelete(subject.id)} className="delete-btn">
+        </Button>
+        <Button variant="danger" onClick={() => onDelete(subject.id)}>
           Delete
-        </button>
+        </Button>
       </div>
-    </div>
+    </article>
   );
 };
 

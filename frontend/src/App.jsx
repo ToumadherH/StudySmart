@@ -3,11 +3,18 @@ import {
   Routes,
   Route,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
-import Home from "./pages/Home";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Subjects from "./pages/Subjects";
+import Calendar from "./pages/Calendar";
+import Statistics from "./pages/Statistics";
+import PlanningPage from "./pages/PlanningPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AppShell from "./components/layout/AppShell";
 import "./App.css";
 
 // Component to handle root path navigation
@@ -16,16 +23,30 @@ function RootRedirect() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>Loading...</div>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl border border-ss-border bg-ss-surface/45 px-6 py-8 text-center shadow-soft">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-ss-border border-t-ss-accent" />
+          <p className="text-sm text-ss-muted">Loading your workspace...</p>
+        </div>
+      </div>
     );
   }
 
-  return isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+}
+
+function ProtectedLayout() {
+  return (
+    <ProtectedRoute>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </ProtectedRoute>
+  );
 }
 
 function App() {
@@ -35,15 +56,15 @@ function App() {
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          {/* Catch-all route - redirect to home */}
+          <Route path="/register" element={<Register />} />
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/subjects" element={<Subjects />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/planning" element={<PlanningPage />} />
+          </Route>
+          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
