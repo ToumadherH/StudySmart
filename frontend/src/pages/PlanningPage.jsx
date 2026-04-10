@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import "./PlanningPage.css";
+import Card from "../components/ui/Card";
+import InputField from "../components/ui/InputField";
+import Button from "../components/ui/Button";
+import { AlertMessage, EmptyState } from "../components/ui/Feedback";
 
 const PlanningPage = () => {
-  const { logout } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     weeks: 2,
@@ -49,144 +50,91 @@ const PlanningPage = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-  };
-
   return (
-    <div className="planning-page">
-      <header className="planning-header">
-        <div className="header-left">
-          <h1>Study Plan Generator</h1>
-          <p>Generate optimized study sessions based on subject priority</p>
-        </div>
-        <nav className="header-actions">
-          <Link to="/dashboard" className="nav-link">
-            Dashboard
-          </Link>
-          <Link to="/subjects" className="nav-link">
-            Subjects
-          </Link>
-          <Link to="/calendar" className="nav-link">
-            Calendar
-          </Link>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
-        </nav>
+    <div className="page-shell">
+      <header className="page-header">
+        <h1 className="page-title">Planning generator</h1>
+        <p className="page-subtitle">Create optimized sessions using subject difficulty and exam urgency.</p>
       </header>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
 
-      <div className="session-form-container">
-        <form onSubmit={handleGeneratePlan} className="session-form">
-          <h3>Configure Plan</h3>
-
-          <div className="form-group">
-            <label htmlFor="weeks">Number of Weeks to Plan</label>
-            <input
-              type="number"
-              id="weeks"
-              name="weeks"
-              value={formData.weeks}
-              onChange={handleInputChange}
-              min="1"
-              max="12"
-              required
-            />
-            <small style={{ color: "#666", marginTop: "4px" }}>
-              Between 1 and 12 weeks
-            </small>
+      <Card elevated>
+        <form onSubmit={handleGeneratePlan} className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <h2 className="m-0 text-xl font-semibold text-ss-highlight">Configuration</h2>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="sessions_per_week">Sessions Per Week</label>
-            <input
-              type="number"
-              id="sessions_per_week"
-              name="sessions_per_week"
-              value={formData.sessions_per_week}
-              onChange={handleInputChange}
-              min="1"
-              max="20"
-              required
-            />
-            <small style={{ color: "#666", marginTop: "4px" }}>
-              Between 1 and 20 sessions
-            </small>
+          <InputField
+            id="weeks"
+            name="weeks"
+            type="number"
+            min="1"
+            max="12"
+            label="Number of weeks"
+            hint="Choose between 1 and 12 weeks."
+            value={formData.weeks}
+            onChange={handleInputChange}
+            required
+          />
+          <InputField
+            id="sessions_per_week"
+            name="sessions_per_week"
+            type="number"
+            min="1"
+            max="20"
+            label="Sessions per week"
+            hint="Choose between 1 and 20 sessions."
+            value={formData.sessions_per_week}
+            onChange={handleInputChange}
+            required
+          />
+          <div className="md:col-span-2">
+            <Button type="submit" variant="primary" disabled={loading}>
+              {loading ? "Generating plan..." : "Generate plan"}
+            </Button>
           </div>
-
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Generating Plan..." : "✨ Generate Plan"}
-          </button>
         </form>
-      </div>
+      </Card>
 
-      {result && result.success && (
-        <div>
-          <div className="alert alert-success">
-            ✓ Successfully generated{" "}
-            <strong>{result.total_sessions_created}</strong> study sessions!
-          </div>
+      {result && result.success ? (
+        <>
+          <AlertMessage variant="success">
+            Plan generated successfully with {result.total_sessions_created} sessions.
+          </AlertMessage>
 
-          <div className="sessions-container">
-            <h2 style={{ marginBottom: "20px", color: "#2c3e50" }}>
-              Sessions Breakdown by Subject
-            </h2>
-            <div className="sessions-grid">
-              {result.by_subject.map((item, index) => (
-                <div key={index} className="session-card">
-                  <div className="session-header">
-                    <h4>{item.subject}</h4>
-                  </div>
-                  <div className="session-details">
-                    <p>
-                      <strong>Sessions Created:</strong> {item.sessions_created}
-                    </p>
-                    <p>
-                      <strong>Total Duration:</strong>{" "}
-                      {item.total_duration_hours.toFixed(1)} hours
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Generated sessions by subject">
+            {result.by_subject.map((item, index) => (
+              <Card key={index} elevated>
+                <h3 className="m-0 text-lg font-semibold text-ss-highlight">{item.subject}</h3>
+                <p className="mt-3 text-sm text-ss-muted">Sessions created: {item.sessions_created}</p>
+                <p className="mt-1 text-sm text-ss-muted">Total duration: {item.total_duration_hours.toFixed(1)} hours</p>
+              </Card>
+            ))}
+          </section>
 
-          <div style={{ marginTop: "30px", display: "flex", gap: "10px" }}>
-            <button
-              onClick={() => navigate("/calendar")}
-              className="btn btn-primary"
-              style={{ flex: 1 }}
-            >
-              📅 View Calendar
-            </button>
-            <button
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-xl">
+            <Button variant="primary" onClick={() => navigate("/calendar")}>
+              View calendar
+            </Button>
+            <Button
+              variant="secondary"
               onClick={() => {
                 setResult(null);
                 setError("");
               }}
-              className="btn btn-secondary"
-              style={{ flex: 1 }}
             >
-              Generate Another Plan
-            </button>
-          </div>
-        </div>
-      )}
+              Generate another plan
+            </Button>
+          </section>
+        </>
+      ) : null}
 
-      {!result && !error && (
-        <div className="empty-state">
-          <p>
-            👋 Configure your plan parameters and click "Generate Plan" to
-            create study sessions.
-          </p>
-          <p style={{ fontSize: "14px", color: "#999", marginTop: "10px" }}>
-            Sessions will be distributed across your subjects based on
-            difficulty level (60%) and exam proximity (40%).
-          </p>
-        </div>
-      )}
+      {!result && !error ? (
+        <EmptyState
+          title="Generate your first plan"
+          description="Choose a planning range and session frequency. The system balances subject difficulty and exam proximity."
+        />
+      ) : null}
     </div>
   );
 };

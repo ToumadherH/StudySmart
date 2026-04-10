@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { AlertMessage, LoadingState } from "../components/ui/Feedback";
 import "./Calendar.css";
 
 const Calendar = () => {
-  const { logout } = useAuth();
   const [events, setEvents] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchCalendarData();
@@ -22,6 +22,7 @@ const Calendar = () => {
   const fetchCalendarData = async () => {
     try {
       setLoading(true);
+      setError("");
       const [sessionsRes, subjectsRes] = await Promise.all([
         api.get("/sessions/").catch(() => ({ data: { results: [] } })),
         api.get("/subjects/").catch(() => ({ data: { results: [] } })),
@@ -29,8 +30,6 @@ const Calendar = () => {
 
       const sessionsData = sessionsRes.data.results || sessionsRes.data || [];
       const subjectsData = subjectsRes.data.results || subjectsRes.data || [];
-
-      setSubjects(subjectsData);
 
       // Convert sessions to FullCalendar events
       const sessionEvents = sessionsData.map((session) => {
@@ -41,8 +40,8 @@ const Calendar = () => {
           title: subjectName,
           start: session.start_time,
           end: session.end_time,
-          backgroundColor: isCompleted ? "#48bb78" : "#667eea",
-          borderColor: isCompleted ? "#38a169" : "#5a67d8",
+          backgroundColor: isCompleted ? "#49b48f" : "#00a385",
+          borderColor: isCompleted ? "#49b48f" : "#00a385",
           extendedProps: {
             type: "session",
             sessionId: session.id,
@@ -55,11 +54,11 @@ const Calendar = () => {
       // Add exam dates as events
       const examEvents = subjectsData.map((subject) => ({
         id: `exam-${subject.id}`,
-        title: `📝 ${subject.name} Exam`,
+        title: `${subject.name} Exam`,
         start: subject.exam_date,
         allDay: true,
-        backgroundColor: "#e53e3e",
-        borderColor: "#c53030",
+        backgroundColor: "#d16666",
+        borderColor: "#d16666",
         extendedProps: {
           type: "exam",
           subjectId: subject.id,
@@ -67,8 +66,8 @@ const Calendar = () => {
       }));
 
       setEvents([...sessionEvents, ...examEvents]);
-    } catch (err) {
-      console.error("Failed to fetch calendar data:", err);
+    } catch {
+      setError("We could not load calendar data right now.");
     } finally {
       setLoading(false);
     }
@@ -100,49 +99,24 @@ const Calendar = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-  };
-
   const closeModal = () => {
     setSelectedEvent(null);
   };
 
   if (loading) {
-    return (
-      <div className="calendar-loading">
-        <div className="spinner"></div>
-        <p>Loading calendar...</p>
-      </div>
-    );
+    return <LoadingState title="Loading calendar" description="Gathering sessions and exam events." />;
   }
 
   return (
-    <div className="calendar-page">
-      <header className="calendar-header">
-        <div className="header-left">
-          <h1>Study Calendar</h1>
-          <p>View and manage your study sessions</p>
-        </div>
-        <div className="header-right">
-          <nav className="calendar-nav">
-            <Link to="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
-            <Link to="/planning" className="nav-link">
-              Planning
-            </Link>
-            <Link to="/subjects" className="nav-link">
-              Subjects
-            </Link>
-          </nav>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
-        </div>
+    <div className="page-shell">
+      <header className="page-header">
+        <h1 className="page-title">Calendar</h1>
+        <p className="page-subtitle">Review upcoming sessions and exam dates in one timeline.</p>
       </header>
 
-      <main className="calendar-content">
+      {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
+
+      <Card elevated>
         <div className="calendar-legend">
           <div className="legend-item">
             <span className="legend-color session"></span>
@@ -175,15 +149,15 @@ const Calendar = () => {
             dayMaxEvents={3}
           />
         </div>
-      </main>
+      </Card>
 
       {selectedEvent && (
         <div className="event-modal-overlay" onClick={closeModal}>
-          <div className="event-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="event-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Event details">
             <div className="event-modal-header">
               <h3>{selectedEvent.title}</h3>
-              <button className="close-btn" onClick={closeModal}>
-                &times;
+              <button className="close-btn" onClick={closeModal} aria-label="Close event dialog">
+                X
               </button>
             </div>
             <div className="event-modal-body">
@@ -231,14 +205,15 @@ const Calendar = () => {
             </div>
             {selectedEvent.type === "session" && (
               <div className="event-modal-footer">
-                <button
+                <Button
                   className={`toggle-btn ${selectedEvent.status === "completed" ? "mark-incomplete" : "mark-complete"}`}
                   onClick={handleToggleComplete}
+                  variant={selectedEvent.status === "completed" ? "secondary" : "primary"}
                 >
                   {selectedEvent.status === "completed"
                     ? "Mark as Incomplete"
                     : "Mark as Complete"}
-                </button>
+                </Button>
               </div>
             )}
           </div>
