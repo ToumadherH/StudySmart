@@ -1,16 +1,20 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import authService from '../services/authService';
-import './Auth.css';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import authService from "../services/authService";
+import InputField from "../components/ui/InputField";
+import Button from "../components/ui/Button";
+import { AlertMessage } from "../components/ui/Feedback";
+import AuthSplitLayout from "../components/layout/AuthSplitLayout";
+import loginPhoto from "../assets/login-photo.png";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    password2: '',
+    username: "",
+    email: "",
+    password: "",
+    password2: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,11 +28,11 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setFieldErrors({});
 
     if (formData.password !== formData.password2) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
@@ -39,10 +43,13 @@ const Register = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        password2: formData.password2,
       });
-      navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
+      navigate("/login", {
+        state: { message: "Registration successful! Please log in." },
+      });
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error("Registration error:", err);
       const data = err.response?.data;
       if (data) {
         const errors = {};
@@ -52,10 +59,10 @@ const Register = () => {
         if (Object.keys(errors).length > 0) {
           setFieldErrors(errors);
         } else {
-          setError(data.detail || 'Registration failed. Please try again.');
+          setError(data.detail || "Registration failed. Please try again.");
         }
       } else {
-        setError('Registration failed. Please try again.');
+        setError("Registration failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -63,88 +70,96 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join StudySmart today</p>
+    <AuthSplitLayout
+      title="Create your account"
+      subtitle="Set up a focused study workspace with subject tracking, planning, and calendar visibility in one place."
+      mediaTitle="Plan each week with clarity"
+      mediaDescription="Organize subjects by priority, generate balanced sessions, and keep exam preparation structured from day one."
+      imageSrc={loginPhoto}
+      footer={(
+        <p className="text-sm text-ss-neutral-300">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="font-semibold text-ss-highlight transition-colors hover:text-ss-accent-soft"
+          >
+            Sign in
+          </Link>
+        </p>
+      )}
+    >
 
         {error && (
-          <div className="error-message">
-            {error}
+          <div className="mb-4">
+            <AlertMessage variant="error">{error}</AlertMessage>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Choose a username"
-              autoComplete="username"
-            />
-            {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <InputField
+            type="text"
+            id="username"
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            placeholder="Choose a username"
+            autoComplete="username"
+            hint="Use at least 3 characters."
+            error={fieldErrors.username}
+          />
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Enter your email"
-              autoComplete="email"
-            />
-            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
-          </div>
+          <InputField
+            type="email"
+            id="email"
+            label="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            placeholder="Enter your email"
+            autoComplete="email"
+            error={fieldErrors.email}
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Create a password"
-              autoComplete="new-password"
-              minLength={8}
-            />
-            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
-          </div>
+          <InputField
+            type="password"
+            id="password"
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            placeholder="Create a password"
+            autoComplete="new-password"
+            minLength={8}
+            hint="Use at least 8 characters."
+            error={fieldErrors.password}
+          />
 
-          <div className="form-group">
-            <label htmlFor="password2">Confirm Password</label>
-            <input
-              type="password"
-              id="password2"
-              name="password2"
-              value={formData.password2}
-              onChange={handleChange}
-              required
-              placeholder="Confirm your password"
-              autoComplete="new-password"
-            />
-          </div>
+          <InputField
+            type="password"
+            id="password2"
+            label="Confirm Password"
+            name="password2"
+            value={formData.password2}
+            onChange={handleChange}
+            required
+            placeholder="Confirm your password"
+            autoComplete="new-password"
+            error={
+              formData.password2 && formData.password !== formData.password2
+                ? "Passwords do not match"
+                : ""
+            }
+          />
 
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
+          <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            {loading ? "Creating account..." : "Create account"}
+          </Button>
         </form>
-
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
-      </div>
-    </div>
+    </AuthSplitLayout>
   );
 };
 

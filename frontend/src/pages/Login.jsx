@@ -1,14 +1,18 @@
-import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './Auth.css';
+import { useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import InputField from "../components/ui/InputField";
+import Button from "../components/ui/Button";
+import { AlertMessage } from "../components/ui/Feedback";
+import AuthSplitLayout from "../components/layout/AuthSplitLayout";
+import loginPhoto from "../assets/login-photo.png";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,17 +29,17 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await login(formData);
-      navigate('/home');
+      navigate("/dashboard");
     } catch (err) {
-      console.error('Login error:', err);
-      const message = err.response?.data?.detail ||
-                      err.response?.data?.error ||
-                      'Invalid credentials. Please try again.';
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.error ||
+        "Invalid credentials. Please try again.";
       setError(message);
     } finally {
       setLoading(false);
@@ -43,62 +47,71 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to continue to StudySmart</p>
-
+    <AuthSplitLayout
+      title="Welcome back"
+      subtitle="Sign in to continue planning focused study sessions and stay on top of upcoming exams."
+      mediaTitle="Study with consistency"
+      mediaDescription="Build momentum with structured planning, clear priorities, and a streamlined workspace designed for productive revision cycles."
+      imageSrc={loginPhoto}
+      footer={(
+        <p className="text-sm text-ss-neutral-300">
+          Do not have an account?{" "}
+          <Link
+            to="/register"
+            className="font-semibold text-ss-highlight transition-colors hover:text-ss-accent-soft"
+          >
+            Create one
+          </Link>
+        </p>
+      )}
+    >
         {successMessage && (
-          <div className="success-message">
-            {successMessage}
+          <div className="mb-4">
+            <AlertMessage variant="success">
+              {successMessage}
+            </AlertMessage>
           </div>
         )}
 
         {error && (
-          <div className="error-message">
-            {error}
+          <div className="mb-4">
+            <AlertMessage variant="error">
+              {error}
+            </AlertMessage>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Enter your username"
-              autoComplete="username"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <InputField
+            type="text"
+            id="username"
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            placeholder="Enter your username"
+            autoComplete="username"
+            hint="Use the username you created during registration."
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
-          </div>
+          <InputField
+            type="password"
+            id="password"
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            placeholder="Enter your password"
+            autoComplete="current-password"
+          />
 
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
         </form>
-
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
-      </div>
-    </div>
+    </AuthSplitLayout>
   );
 };
 
