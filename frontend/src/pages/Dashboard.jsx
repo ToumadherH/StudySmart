@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import "./Dashboard.css";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { AlertMessage, EmptyState, LoadingState } from "../components/ui/Feedback";
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalSubjects: 0,
@@ -15,6 +17,7 @@ const Dashboard = () => {
   });
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchDashboardData();
@@ -23,6 +26,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError("");
       const [subjectsRes, statsRes] = await Promise.all([
         api.get("/subjects/").catch(() => ({ data: { results: [] } })),
         api.get("/planning/stats/").catch(() => ({ data: {} })),
@@ -42,15 +46,11 @@ const Dashboard = () => {
           return daysLeft > 0 && daysLeft <= 30;
         }).length,
       });
-    } catch (err) {
-      console.error("Failed to fetch dashboard data:", err);
+    } catch {
+      setError("We could not load your dashboard data right now.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    await logout();
   };
 
   const getDaysLeft = (examDate) => {
@@ -59,8 +59,9 @@ const Dashboard = () => {
     return Math.ceil((exam - today) / (1000 * 60 * 60 * 24));
   };
 
-  const getDifficultyStars = (level) => {
-    return "★".repeat(level) + "☆".repeat(5 - level);
+  const getDifficultyLabel = (level) => {
+    const labels = ["", "Easy", "Medium", "Moderate", "Hard", "Very hard"];
+    return labels[level] || "Unknown";
   };
 
   const getProgress = (subject) => {
@@ -71,166 +72,112 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="loading">Loading dashboard...</div>
-      </div>
-    );
+    return <LoadingState title="Loading dashboard" description="Collecting your progress and upcoming exams." />;
   }
 
   return (
-    <div className="dashboard-container">
-      <nav className="dashboard-nav">
-        <div className="nav-brand">
-          <h2>StudySmart</h2>
-        </div>
-        <div className="nav-links">
-          <button className="nav-btn" onClick={() => navigate("/subjects")}>
-            Subjects
-          </button>
-          <button className="nav-btn" onClick={() => navigate("/planning")}>
-            Planning
-          </button>
-          <button className="nav-btn" onClick={() => navigate("/calendar")}>
-            Calendar
-          </button>
-          <button className="nav-btn logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </nav>
+    <div className="page-shell">
+      <header className="page-header">
+        <h1 className="page-title">Welcome back, {user?.username || "Student"}</h1>
+        <p className="page-subtitle">Track your progress, monitor exam priorities, and keep your study cadence consistent.</p>
+      </header>
 
-      <div className="dashboard-content">
-        <div className="welcome-section">
-          <h1>Welcome back, {user?.username || "Student"}!</h1>
-          <p>Track your study progress and stay on top of your exams</p>
-        </div>
+      {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">📚</div>
-            <div className="stat-content">
-              <h3>Subjects</h3>
-              <p className="stat-value">{stats.totalSubjects}</p>
-              <p className="stat-label">Total subjects</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">📅</div>
-            <div className="stat-content">
-              <h3>Sessions</h3>
-              <p className="stat-value">{stats.totalSessions}</p>
-              <p className="stat-label">Study sessions</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">✅</div>
-            <div className="stat-content">
-              <h3>Completed</h3>
-              <p className="stat-value">{stats.completedSessions}</p>
-              <p className="stat-label">Sessions done</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">⏰</div>
-            <div className="stat-content">
-              <h3>Upcoming</h3>
-              <p className="stat-value">{stats.upcomingExams}</p>
-              <p className="stat-label">Exams this month</p>
-            </div>
-          </div>
-        </div>
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Summary metrics">
+        <Card elevated>
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Subjects</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.totalSubjects}</p>
+        </Card>
+        <Card elevated>
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Total sessions</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.totalSessions}</p>
+        </Card>
+        <Card elevated>
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Completed sessions</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.completedSessions}</p>
+        </Card>
+        <Card elevated>
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Upcoming exams</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.upcomingExams}</p>
+        </Card>
+      </section>
 
-        {subjects.length > 0 ? (
-          <>
-            <div className="upcoming-section">
-              <h2>Upcoming Exams</h2>
-              <div className="exams-list">
+      {subjects.length > 0 ? (
+        <>
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2" aria-label="Exam and progress panels">
+            <Card elevated>
+              <h2 className="mb-4 text-xl font-semibold text-ss-highlight">Upcoming exams</h2>
+              <div className="space-y-3">
                 {subjects
                   .filter((s) => getDaysLeft(s.exam_date) > 0)
                   .sort((a, b) => new Date(a.exam_date) - new Date(b.exam_date))
-                  .slice(0, 4)
+                  .slice(0, 5)
                   .map((subject) => (
-                    <div key={subject.id} className="exam-item">
-                      <div className="exam-info">
-                        <h4>{subject.name}</h4>
-                        <p>
-                          {new Date(subject.exam_date).toLocaleDateString(
-                            "en-US",
-                            {
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                            },
-                          )}
-                        </p>
-                      </div>
-                      <div className="exam-stats">
-                        <span className="days-left">
+                    <div
+                      key={subject.id}
+                      className="rounded-xl border border-ss-border bg-ss-surface/35 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="m-0 text-base font-semibold text-ss-text">{subject.name}</h3>
+                        <span className="text-sm font-semibold text-ss-accent">
                           {getDaysLeft(subject.exam_date)} days left
                         </span>
-                        <span className="sessions-done">
-                          {subject.completed_sessions || 0}/
-                          {subject.total_sessions || 0} sessions
-                        </span>
                       </div>
+                      <p className="mt-1 text-sm text-ss-muted">
+                        {new Date(subject.exam_date).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
                     </div>
                   ))}
               </div>
-            </div>
+            </Card>
 
-            <div className="by-subject-section">
-              <h2>Progress by Subject</h2>
-              <div className="subjects-list">
+            <Card elevated>
+              <h2 className="mb-4 text-xl font-semibold text-ss-highlight">Progress by subject</h2>
+              <div className="space-y-3">
                 {subjects.map((subject) => (
-                  <div key={subject.id} className="subject-item">
-                    <div className="subject-header">
-                      <h4>{subject.name}</h4>
-                      <span className="difficulty">
-                        {getDifficultyStars(subject.difficulty)}
-                      </span>
+                  <div key={subject.id} className="rounded-xl border border-ss-border bg-ss-surface/35 px-4 py-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <h3 className="m-0 text-sm font-semibold text-ss-text">{subject.name}</h3>
+                      <span className="text-xs text-ss-muted">{getDifficultyLabel(subject.difficulty)}</span>
                     </div>
-                    <div className="progress-bar">
+                    <div className="h-2 rounded-full bg-ss-bg">
                       <div
-                        className="progress-fill"
+                        className="h-2 rounded-full bg-ss-accent transition-all duration-300"
                         style={{ width: `${getProgress(subject)}%` }}
-                      ></div>
+                      />
                     </div>
-                    <p className="progress-text">
-                      {getProgress(subject)}% complete
+                    <p className="mt-2 text-xs text-ss-muted">
+                      {subject.completed_sessions || 0}/{subject.total_sessions || 0} sessions completed
                     </p>
                   </div>
                 ))}
               </div>
-            </div>
-          </>
-        ) : (
-          <div className="empty-state">
-            <p>No subjects yet. Add your first subject to start planning!</p>
-            <button
-              className="btn btn-primary btn-large"
-              onClick={() => navigate("/subjects")}
-            >
-              + Add Subject
-            </button>
-          </div>
-        )}
+            </Card>
+          </section>
 
-        <div className="action-section">
-          <button
-            className="btn btn-primary btn-large"
-            onClick={() => navigate("/subjects")}
-          >
-            📚 Manage Subjects
-          </button>
-          <button
-            className="btn btn-secondary btn-large"
-            onClick={() => navigate("/calendar")}
-          >
-            📅 View Calendar
-          </button>
-        </div>
-      </div>
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-xl">
+            <Button variant="primary" onClick={() => navigate("/subjects")}>
+              Manage subjects
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("/calendar")}>
+              View calendar
+            </Button>
+          </section>
+        </>
+      ) : (
+        <EmptyState
+          title="No subjects yet"
+          description="Create your first subject to generate planning sessions and track upcoming exams."
+          actionLabel="Add subject"
+          onAction={() => navigate("/subjects")}
+        />
+      )}
     </div>
   );
 };

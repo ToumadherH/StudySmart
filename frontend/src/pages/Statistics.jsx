@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,8 +12,9 @@ import {
   LineElement,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import Card from '../components/ui/Card';
+import { AlertMessage, EmptyState, LoadingState } from '../components/ui/Feedback';
 import './Statistics.css';
 
 // Register Chart.js components
@@ -31,10 +31,10 @@ ChartJS.register(
 );
 
 const Statistics = () => {
-  const { logout } = useAuth();
   const [stats, setStats] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchStatistics();
@@ -43,6 +43,7 @@ const Statistics = () => {
   const fetchStatistics = async () => {
     try {
       setLoading(true);
+      setError('');
       const [statsRes, subjectsRes] = await Promise.all([
         api.get('/statistics/').catch(() => ({ data: {} })),
         api.get('/subjects/').catch(() => ({ data: { results: [] } })),
@@ -50,15 +51,11 @@ const Statistics = () => {
 
       setStats(statsRes.data);
       setSubjects(subjectsRes.data.results || subjectsRes.data || []);
-    } catch (err) {
-      console.error('Failed to fetch statistics:', err);
+    } catch {
+      setError('Failed to load statistics. Please try again in a moment.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    await logout();
   };
 
   // Progress by Subject Chart Data
@@ -73,13 +70,13 @@ const Statistics = () => {
         {
           label: 'Completed',
           data: completedData,
-          backgroundColor: '#48bb78',
+          backgroundColor: '#00a385',
           borderRadius: 4,
         },
         {
           label: 'Remaining',
           data: totalData,
-          backgroundColor: '#e2e8f0',
+          backgroundColor: '#116556',
           borderRadius: 4,
         },
       ],
@@ -97,7 +94,7 @@ const Statistics = () => {
       datasets: [
         {
           data: [completedSessions, pendingSessions],
-          backgroundColor: ['#48bb78', '#e2e8f0'],
+          backgroundColor: ['#00a385', '#116556'],
           borderWidth: 0,
         },
       ],
@@ -115,8 +112,8 @@ const Statistics = () => {
         {
           label: 'Study Hours',
           data: hoursData,
-          borderColor: '#667eea',
-          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          borderColor: '#00a385',
+          backgroundColor: 'rgba(0, 163, 133, 0.18)',
           fill: true,
           tension: 0.4,
         },
@@ -138,7 +135,7 @@ const Statistics = () => {
       datasets: [
         {
           data: difficultyCount,
-          backgroundColor: ['#48bb78', '#38b2ac', '#ed8936', '#e53e3e', '#9b2c2c'],
+          backgroundColor: ['#49b48f', '#00a385', '#d7d7a8', '#c77f5f', '#d16666'],
           borderWidth: 0,
         },
       ],
@@ -151,6 +148,9 @@ const Statistics = () => {
     plugins: {
       legend: {
         position: 'bottom',
+        labels: {
+          color: '#8cb6ab',
+        },
       },
     },
   };
@@ -160,21 +160,22 @@ const Statistics = () => {
     scales: {
       x: {
         stacked: true,
+        ticks: {
+          color: '#8cb6ab',
+        },
       },
       y: {
         stacked: true,
         beginAtZero: true,
+        ticks: {
+          color: '#8cb6ab',
+        },
       },
     },
   };
 
   if (loading) {
-    return (
-      <div className="statistics-loading">
-        <div className="spinner"></div>
-        <p>Loading statistics...</p>
-      </div>
-    );
+    return <LoadingState title="Loading statistics" description="Preparing your study performance insights." />;
   }
 
   const totalSessions = subjects.reduce((acc, s) => acc + (s.total_sessions || 0), 0);
@@ -182,84 +183,69 @@ const Statistics = () => {
   const completionRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
 
   return (
-    <div className="statistics-page">
-      <header className="statistics-header">
-        <div className="header-left">
-          <h1>Statistics</h1>
-          <p>Track your study progress and performance</p>
-        </div>
-        <div className="header-right">
-          <nav className="statistics-nav">
-            <Link to="/dashboard" className="nav-link">Dashboard</Link>
-            <Link to="/subjects" className="nav-link">Subjects</Link>
-            <Link to="/calendar" className="nav-link">Calendar</Link>
-          </nav>
-          <button onClick={handleLogout} className="logout-btn">Logout</button>
-        </div>
+    <div className="page-shell">
+      <header className="page-header">
+        <h1 className="page-title">Statistics</h1>
+        <p className="page-subtitle">Analyze completion trends and subject distribution to improve your weekly focus.</p>
       </header>
 
-      <main className="statistics-content">
-        <div className="stats-summary">
-          <div className="summary-card">
-            <span className="summary-value">{subjects.length}</span>
-            <span className="summary-label">Total Subjects</span>
-          </div>
-          <div className="summary-card">
-            <span className="summary-value">{totalSessions}</span>
-            <span className="summary-label">Total Sessions</span>
-          </div>
-          <div className="summary-card">
-            <span className="summary-value">{completedSessions}</span>
-            <span className="summary-label">Completed</span>
-          </div>
-          <div className="summary-card highlight">
-            <span className="summary-value">{completionRate}%</span>
-            <span className="summary-label">Completion Rate</span>
-          </div>
-        </div>
+      {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
 
-        <div className="charts-grid">
-          <div className="chart-card">
-            <h3>Progress by Subject</h3>
-            <div className="chart-container">
-              {subjects.length > 0 ? (
-                <Bar data={getProgressChartData()} options={barOptions} />
-              ) : (
-                <p className="no-data">No subjects to display</p>
-              )}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Statistics summary">
+        <Card elevated className="text-center">
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Subjects</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{subjects.length}</p>
+        </Card>
+        <Card elevated className="text-center">
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Total sessions</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{totalSessions}</p>
+        </Card>
+        <Card elevated className="text-center">
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Completed</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{completedSessions}</p>
+        </Card>
+        <Card elevated className="text-center">
+          <p className="text-xs uppercase tracking-wide text-ss-muted">Completion rate</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{completionRate}%</p>
+        </Card>
+      </section>
+
+      {subjects.length === 0 ? (
+        <EmptyState
+          title="No statistics available yet"
+          description="Add subjects and generate planning sessions to populate analytics charts."
+        />
+      ) : (
+        <section className="statistics-grid" aria-label="Statistics charts">
+          <Card elevated className="statistics-card">
+            <h2 className="statistics-card-title">Progress by subject</h2>
+            <div className="statistics-chart">
+              <Bar data={getProgressChartData()} options={barOptions} />
             </div>
-          </div>
+          </Card>
 
-          <div className="chart-card">
-            <h3>Overall Completion</h3>
-            <div className="chart-container doughnut">
-              {totalSessions > 0 ? (
-                <Doughnut data={getCompletionChartData()} options={chartOptions} />
-              ) : (
-                <p className="no-data">No sessions to display</p>
-              )}
+          <Card elevated className="statistics-card">
+            <h2 className="statistics-card-title">Overall completion</h2>
+            <div className="statistics-chart statistics-chart--doughnut">
+              <Doughnut data={getCompletionChartData()} options={chartOptions} />
             </div>
-          </div>
+          </Card>
 
-          <div className="chart-card">
-            <h3>Study Hours This Week</h3>
-            <div className="chart-container">
+          <Card elevated className="statistics-card">
+            <h2 className="statistics-card-title">Study hours this week</h2>
+            <div className="statistics-chart">
               <Line data={getWeeklyChartData()} options={chartOptions} />
             </div>
-          </div>
+          </Card>
 
-          <div className="chart-card">
-            <h3>Subjects by Difficulty</h3>
-            <div className="chart-container doughnut">
-              {subjects.length > 0 ? (
-                <Doughnut data={getDifficultyChartData()} options={chartOptions} />
-              ) : (
-                <p className="no-data">No subjects to display</p>
-              )}
+          <Card elevated className="statistics-card">
+            <h2 className="statistics-card-title">Subjects by difficulty</h2>
+            <div className="statistics-chart statistics-chart--doughnut">
+              <Doughnut data={getDifficultyChartData()} options={chartOptions} />
             </div>
-          </div>
-        </div>
-      </main>
+          </Card>
+        </section>
+      )}
     </div>
   );
 };
