@@ -190,12 +190,20 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.4;
+  color: #1a202c !important;
+  font-weight: 600;
 }
 
 .fc .fc-event-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #1a202c !important;
+}
+
+.fc .fc-event-main {
+  padding: 3px 4px;
+  color: #1a202c !important;
 }
 
 .fc .fc-daygrid-day-frame {
