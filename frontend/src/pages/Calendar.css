@@ -91,7 +91,7 @@
 
 .calendar-content {
   padding: 32px;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -136,6 +136,7 @@
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
 }
 
 /* FullCalendar Customization */
@@ -166,9 +167,14 @@
   border-color: #5a67d8;
 }
 
+.fc .fc-daygrid-day {
+  min-height: 120px;
+}
+
 .fc .fc-daygrid-day-number {
   color: #4a5568;
   font-weight: 500;
+  padding: 8px 4px;
 }
 
 .fc .fc-day-today {
@@ -177,16 +183,44 @@
 
 .fc .fc-event {
   border-radius: 4px;
-  padding: 2px 4px;
+  padding: 4px 6px;
   font-size: 12px;
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
-.fc .fc-event:hover {
-  opacity: 0.9;
+.fc .fc-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Event Modal */
+.fc .fc-daygrid-day-frame {
+  position: relative;
+}
+
+.fc .fc-daygrid-day-events {
+  margin-top: 8px;
+}
+
+/* Better spacing for events in day cells */
+.fc .fc-daygrid-day-events {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fc .fc-daygrid-event {
+  margin-bottom: 2px;
+}
+
+.fc .fc-event-main {
+  padding: 3px 4px;
+}
 .event-modal-overlay {
   position: fixed;
   top: 0;
