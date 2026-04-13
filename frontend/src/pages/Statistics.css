@@ -1,0 +1,34 @@
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.statistics-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 290px;
+}
+
+.statistics-card-title {
+  margin: 0 0 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #d7d7a8;
+}
+
+.statistics-chart {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+}
+
+.statistics-chart--doughnut {
+  min-height: 240px;
+}
+
+@media (min-width: 1024px) {
+  .statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
