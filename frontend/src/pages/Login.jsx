@@ -5,14 +5,17 @@ import './Auth.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const location = useLocation();
   const { login } = useAuth();
+
+  const successMessage = location.state?.message;
 
   const successMessage = location.state?.message;
 
@@ -60,45 +63,45 @@ const Login = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Enter your username"
-              autoComplete="username"
-            />
+        {error && (
+          <div className="mb-4">
+            <AlertMessage variant="error">
+              {error}
+            </AlertMessage>
           </div>
+        )}
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <InputField
+            type="text"
+            id="username"
+            label="Username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            placeholder="Enter your username"
+            autoComplete="username"
+            hint="Use the username you created during registration."
+          />
 
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          <InputField
+            type="password"
+            id="password"
+            label="Password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            placeholder="Enter your password"
+            autoComplete="current-password"
+          />
+
+          <Button type="submit" size="lg" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
         </form>
-
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
-      </div>
-    </div>
+    </AuthSplitLayout>
   );
 };
 
