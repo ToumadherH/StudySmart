@@ -6,11 +6,17 @@ from django.utils import timezone
 from django.db.models import Prefetch
 from .models import Session
 from .serializers import SessionSerializer
+from planning.services import get_dashboard_stats
+from planning.serializers import DashboardStatsSerializer
 
 
 class SessionViewSet(viewsets.ModelViewSet):
     serializer_class = SessionSerializer
     permission_classes = [IsAuthenticated]
+
+    def _get_dashboard_stats_data(self):
+        stats = get_dashboard_stats(self.request.user)
+        return DashboardStatsSerializer(stats).data
 
     def get_queryset(self):
         # Optimize with select_related to avoid N+1 queries
@@ -26,9 +32,18 @@ class SessionViewSet(viewsets.ModelViewSet):
         """Mark a session as completed"""
         session = self.get_object()
         session.status = 'completed'
-        session.save(update_fields=['status', 'updated_at'])
+        session.completed = True
+        session.save(update_fields=['status', 'completed', 'updated_at'])
         serializer = self.get_serializer(session)
-        return Response(serializer.data)
+        response_data = serializer.data
+        response_data['dashboard_stats'] = self._get_dashboard_stats_data()
+        return Response(response_data)
+
+    def partial_update(self, request, *args, **kwargs):
+        response = super().partial_update(request, *args, **kwargs)
+        if response.status_code < 400 and ('status' in request.data or 'completed' in request.data):
+            response.data['dashboard_stats'] = self._get_dashboard_stats_data()
+        return response
 
     @action(detail=False, methods=['get'])
     def by_subject(self, request):

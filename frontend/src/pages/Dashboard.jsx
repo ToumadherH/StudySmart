@@ -1,57 +1,95 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { subscribeSessionProgressUpdated } from "../services/sessionSync";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { AlertMessage, EmptyState, LoadingState } from "../components/ui/Feedback";
 
+const normalizeToArray = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.results)) {
+    return payload.results;
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+
+  return [];
+};
+
+const isSessionCompleted = (session) =>
+  session?.completed === true || session?.status === "completed";
+
+const clampProgress = (value) => Math.min(Math.max(value, 0), 100);
+
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    totalSubjects: 0,
-    totalSessions: 0,
-    completedSessions: 0,
-    upcomingExams: 0,
-  });
   const [subjects, setSubjects] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchDashboardData();
+  const fetchAllSessions = useCallback(async () => {
+    const collectedSessions = [];
+    let nextPage = "/sessions/";
+
+    while (nextPage) {
+      const response = await api.get(nextPage);
+      const payload = response.data;
+
+      if (Array.isArray(payload)) {
+        collectedSessions.push(...payload);
+        break;
+      }
+
+      if (Array.isArray(payload?.results)) {
+        collectedSessions.push(...payload.results);
+
+        if (typeof payload.next === "string" && payload.next.startsWith("/api/")) {
+          nextPage = payload.next.replace(/^\/api/, "");
+        } else {
+          nextPage = payload.next || null;
+        }
+
+        continue;
+      }
+
+      break;
+    }
+
+    return collectedSessions;
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async (showLoadingState = true) => {
     try {
-      setLoading(true);
+      if (showLoadingState) {
+        setLoading(true);
+      }
+
       setError("");
-      const [subjectsRes, statsRes] = await Promise.all([
+      const [subjectsRes, sessionsData] = await Promise.all([
         api.get("/subjects/").catch(() => ({ data: { results: [] } })),
-        api.get("/planning/stats/").catch(() => ({ data: {} })),
+        fetchAllSessions().catch(() => []),
       ]);
 
-      const subjectsData = subjectsRes.data.results || subjectsRes.data || [];
+      const subjectsData = normalizeToArray(subjectsRes.data);
       setSubjects(subjectsData);
-
-      setStats({
-        totalSubjects: subjectsData.length,
-        totalSessions: statsRes.data.total_sessions || 0,
-        completedSessions: statsRes.data.completed_sessions || 0,
-        upcomingExams: subjectsData.filter((s) => {
-          const daysLeft = Math.ceil(
-            (new Date(s.exam_date) - new Date()) / (1000 * 60 * 60 * 24),
-          );
-          return daysLeft > 0 && daysLeft <= 30;
-        }).length,
-      });
+      setSessions(sessionsData);
     } catch {
       setError("We could not load your dashboard data right now.");
     } finally {
-      setLoading(false);
+      if (showLoadingState) {
+        setLoading(false);
+      }
     }
-  };
+  }, [fetchAllSessions]);
 
   const getDaysLeft = (examDate) => {
     const today = new Date();
@@ -64,12 +102,92 @@ const Dashboard = () => {
     return labels[level] || "Unknown";
   };
 
-  const getProgress = (subject) => {
-    if (!subject.total_sessions || subject.total_sessions === 0) return 0;
-    return Math.round(
-      ((subject.completed_sessions || 0) / subject.total_sessions) * 100,
+  const dashboardStats = useMemo(() => {
+    const completedSessions = sessions.reduce(
+      (total, session) => (isSessionCompleted(session) ? total + 1 : total),
+      0,
     );
+
+    return {
+      totalSubjects: subjects.length,
+      totalSessions: sessions.length,
+      completedSessions,
+      upcomingExams: subjects.filter((subject) => {
+        const daysLeft = getDaysLeft(subject.exam_date);
+        return daysLeft > 0 && daysLeft <= 30;
+      }).length,
+    };
+  }, [sessions, subjects]);
+
+  const subjectProgressMap = useMemo(() => {
+    const progressMap = new Map();
+
+    sessions.forEach((session) => {
+      const subjectId = Number(session.subject_id ?? session.subject?.id);
+      if (Number.isNaN(subjectId)) {
+        return;
+      }
+
+      const previous = progressMap.get(subjectId) || {
+        totalSessions: 0,
+        completedSessions: 0,
+      };
+
+      progressMap.set(subjectId, {
+        totalSessions: previous.totalSessions + 1,
+        completedSessions:
+          previous.completedSessions + (isSessionCompleted(session) ? 1 : 0),
+      });
+    });
+
+    return progressMap;
+  }, [sessions]);
+
+  const getSubjectProgress = (subjectId) => {
+    const metrics = subjectProgressMap.get(Number(subjectId)) || {
+      totalSessions: 0,
+      completedSessions: 0,
+    };
+
+    const progress =
+      metrics.totalSessions > 0
+        ? Math.round((metrics.completedSessions / metrics.totalSessions) * 100)
+        : 0;
+
+    return {
+      ...metrics,
+      progress: clampProgress(progress),
+    };
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeSessionProgressUpdated((payload = {}) => {
+      const sessionId = Number(payload.session_id);
+      const status = payload.status;
+
+      if (!Number.isNaN(sessionId) && status) {
+        setSessions((currentSessions) =>
+          currentSessions.map((session) =>
+            session.id === sessionId
+              ? {
+                  ...session,
+                  status,
+                  completed: status === "completed",
+                }
+              : session,
+          ),
+        );
+      }
+
+      fetchDashboardData(false);
+    });
+
+    return unsubscribe;
+  }, [fetchDashboardData]);
 
   if (loading) {
     return <LoadingState title="Loading dashboard" description="Collecting your progress and upcoming exams." />;
@@ -87,19 +205,19 @@ const Dashboard = () => {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Summary metrics">
         <Card elevated>
           <p className="text-xs uppercase tracking-wide text-ss-muted">Subjects</p>
-          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.totalSubjects}</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{dashboardStats.totalSubjects}</p>
         </Card>
         <Card elevated>
           <p className="text-xs uppercase tracking-wide text-ss-muted">Total sessions</p>
-          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.totalSessions}</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{dashboardStats.totalSessions}</p>
         </Card>
         <Card elevated>
           <p className="text-xs uppercase tracking-wide text-ss-muted">Completed sessions</p>
-          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.completedSessions}</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{dashboardStats.completedSessions}</p>
         </Card>
         <Card elevated>
           <p className="text-xs uppercase tracking-wide text-ss-muted">Upcoming exams</p>
-          <p className="mt-2 text-3xl font-bold text-ss-highlight">{stats.upcomingExams}</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{dashboardStats.upcomingExams}</p>
         </Card>
       </section>
 
@@ -140,23 +258,30 @@ const Dashboard = () => {
             <Card elevated className="space-y-4 !p-6">
               <h2 className="mb-4 text-xl font-semibold text-ss-highlight">Progress by subject</h2>
               <div className="space-y-3">
-                {subjects.map((subject) => (
-                  <div key={subject.id} className="glass-surface px-4 py-3">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <h3 className="m-0 text-sm font-semibold text-ss-text">{subject.name}</h3>
-                      <span className="text-xs text-ss-muted">{getDifficultyLabel(subject.difficulty)}</span>
+                {subjects.map((subject) => {
+                  const subjectProgress = getSubjectProgress(subject.id);
+
+                  return (
+                    <div key={subject.id} className="glass-surface px-4 py-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <h3 className="m-0 text-sm font-semibold text-ss-text">{subject.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-ss-accent">{subjectProgress.progress}%</span>
+                          <span className="text-xs text-ss-muted">{getDifficultyLabel(subject.difficulty)}</span>
+                        </div>
+                      </div>
+                      <div className="h-2 rounded-full bg-[rgba(255,255,255,0.06)]">
+                        <div
+                          className="h-2 rounded-full bg-white transition-all duration-300"
+                          style={{ width: `${subjectProgress.progress}%` }}
+                        />
+                      </div>
+                      <p className="mt-2 text-xs text-ss-muted">
+                        {subjectProgress.completedSessions}/{subjectProgress.totalSessions} sessions
+                      </p>
                     </div>
-                    <div className="h-2 rounded-full bg-[rgba(255,255,255,0.06)]">
-                      <div
-                        className="h-2 rounded-full bg-ss-accent transition-all duration-300"
-                        style={{ width: `${getProgress(subject)}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-xs text-ss-muted">
-                      {subject.completed_sessions || 0}/{subject.total_sessions || 0} sessions completed
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           </section>

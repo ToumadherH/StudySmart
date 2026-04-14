@@ -32,7 +32,7 @@ ChartJS.register(
 
 const Statistics = () => {
   const [stats, setStats] = useState(null);
-  const [subjects, setSubjects] = useState([]);
+  const [subjectStats, setSubjectStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -44,13 +44,10 @@ const Statistics = () => {
     try {
       setLoading(true);
       setError('');
-      const [statsRes, subjectsRes] = await Promise.all([
-        api.get('/statistics/').catch(() => ({ data: {} })),
-        api.get('/subjects/').catch(() => ({ data: { results: [] } })),
-      ]);
+      const statsRes = await api.get('/planning/stats/').catch(() => ({ data: {} }));
 
       setStats(statsRes.data);
-      setSubjects(subjectsRes.data.results || subjectsRes.data || []);
+      setSubjectStats(statsRes.data.by_subject || []);
     } catch {
       setError('Failed to load statistics. Please try again in a moment.');
     } finally {
@@ -60,9 +57,9 @@ const Statistics = () => {
 
   // Progress by Subject Chart Data
   const getProgressChartData = () => {
-    const labels = subjects.map(s => s.name);
-    const completedData = subjects.map(s => s.completed_sessions || 0);
-    const totalData = subjects.map(s => (s.total_sessions || 0) - (s.completed_sessions || 0));
+    const labels = subjectStats.map(s => s.subject);
+    const completedData = subjectStats.map(s => s.completed || 0);
+    const totalData = subjectStats.map(s => (s.total || 0) - (s.completed || 0));
 
     return {
       labels,
@@ -85,8 +82,8 @@ const Statistics = () => {
 
   // Sessions Completion Doughnut Chart
   const getCompletionChartData = () => {
-    const totalSessions = subjects.reduce((acc, s) => acc + (s.total_sessions || 0), 0);
-    const completedSessions = subjects.reduce((acc, s) => acc + (s.completed_sessions || 0), 0);
+    const totalSessions = stats?.total_sessions || 0;
+    const completedSessions = stats?.completed_sessions || 0;
     const pendingSessions = totalSessions - completedSessions;
 
     return {
@@ -124,7 +121,7 @@ const Statistics = () => {
   // Difficulty Distribution
   const getDifficultyChartData = () => {
     const difficultyCount = [0, 0, 0, 0, 0];
-    subjects.forEach(s => {
+    subjectStats.forEach(s => {
       if (s.difficulty >= 1 && s.difficulty <= 5) {
         difficultyCount[s.difficulty - 1]++;
       }
@@ -178,9 +175,14 @@ const Statistics = () => {
     return <LoadingState title="Loading statistics" description="Preparing your study performance insights." />;
   }
 
-  const totalSessions = subjects.reduce((acc, s) => acc + (s.total_sessions || 0), 0);
-  const completedSessions = subjects.reduce((acc, s) => acc + (s.completed_sessions || 0), 0);
-  const completionRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
+  const totalSessions = stats?.total_sessions || 0;
+  const completedSessions = stats?.completed_sessions || 0;
+  const completionRate =
+    stats?.progress_percentage !== undefined
+      ? Math.round(stats.progress_percentage)
+      : totalSessions > 0
+        ? Math.round((completedSessions / totalSessions) * 100)
+        : 0;
 
   return (
     <div className="page-shell">
@@ -194,7 +196,7 @@ const Statistics = () => {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Statistics summary">
         <Card elevated className="text-center">
           <p className="text-xs uppercase tracking-wide text-ss-muted">Subjects</p>
-          <p className="mt-2 text-3xl font-bold text-ss-highlight">{subjects.length}</p>
+          <p className="mt-2 text-3xl font-bold text-ss-highlight">{subjectStats.length}</p>
         </Card>
         <Card elevated className="text-center">
           <p className="text-xs uppercase tracking-wide text-ss-muted">Total sessions</p>
@@ -210,7 +212,7 @@ const Statistics = () => {
         </Card>
       </section>
 
-      {subjects.length === 0 ? (
+      {subjectStats.length === 0 ? (
         <EmptyState
           title="No statistics available yet"
           description="Add subjects and generate planning sessions to populate analytics charts."

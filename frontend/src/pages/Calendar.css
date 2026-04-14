@@ -26,11 +26,11 @@
 }
 
 .legend-color.session {
-  background: #00a385;
+  background: #111827;
 }
 
 .legend-color.completed {
-  background: #49b48f;
+  background: #14b8a6;
 }
 
 .legend-color.exam {
@@ -42,6 +42,7 @@
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 20px;
   padding: 1rem;
+  min-height: 620px;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
@@ -88,14 +89,65 @@
 }
 
 .fc .fc-event {
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 2px 6px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   cursor: pointer;
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease,
+    filter 220ms ease;
 }
 
 .fc .fc-event:hover {
-  opacity: 0.94;
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+}
+
+.fc .fc-event.session-event {
+  border-width: 1px;
+}
+
+.fc .fc-event.session-event--completed {
+  background: #14b8a6 !important;
+  border-color: #0f766e !important;
+  color: #0f172a !important;
+  opacity: 0.92;
+}
+
+.fc .fc-event.session-event--completed .fc-event-title {
+  color: #0f172a;
+  font-weight: 700;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.fc .fc-event.session-event--completed .fc-event-title::before {
+  content: "✓ ";
+  font-weight: 800;
+}
+
+.fc .fc-event.session-event--incomplete {
+  background: #111827 !important;
+  border-color: #374151 !important;
+  color: #f8fafc !important;
+}
+
+.fc .fc-event.session-event--incomplete .fc-event-title {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.fc .fc-event.session-event--incomplete:hover {
+  border-color: #4b5563 !important;
+}
+
+.fc .fc-event.session-event--completed:hover {
+  filter: brightness(1.03);
+}
+
+.fc .fc-event.session-event--exam {
+  color: #fff;
+  border-color: #d16666 !important;
 }
 
 .fc .fc-scrollgrid,
@@ -167,6 +219,12 @@
   color: #d7d7a8;
 }
 
+.event-title-completed {
+  color: #14b8a6 !important;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
 .close-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -204,12 +262,17 @@
 }
 
 .status-completed {
-  color: #49b48f;
+  color: #14b8a6;
+  font-weight: 600;
+}
+
+.status-in-progress {
+  color: #93c5fd;
   font-weight: 600;
 }
 
 .status-pending {
-  color: #d7d7a8;
+  color: #cbd5e1;
   font-weight: 600;
 }
 
@@ -225,6 +288,7 @@
 
   .calendar-container {
     padding: 0;
+    min-height: 540px;
   }
 
   .fc .fc-toolbar {
