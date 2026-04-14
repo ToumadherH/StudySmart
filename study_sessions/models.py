@@ -15,6 +15,7 @@ class Session(models.Model):
     start_time = models.DateTimeField()
     duration_minutes = models.IntegerField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned')
+    completed = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -27,3 +28,14 @@ class Session(models.Model):
 
     def __str__(self):
         return f"{self.subject.name} - {self.start_time} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        # Keep boolean completed and status aligned regardless of update entry point.
+        if self.status == 'completed':
+            self.completed = True
+        elif self.completed:
+            self.status = 'completed'
+        else:
+            self.completed = False
+
+        super().save(*args, **kwargs)
