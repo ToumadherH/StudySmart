@@ -1,22 +1,23 @@
-import { useState, useEffect } from 'react';
-import InputField from './ui/InputField';
-import Button from './ui/Button';
-import { AlertMessage } from './ui/Feedback';
+import { useState, useEffect } from "react";
+import InputField from "./ui/InputField";
+import Button from "./ui/Button";
+import Card from "./ui/Card";
+import { AlertMessage } from "./ui/Feedback";
 
 const SubjectModal = ({ subject, onSave, onClose }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    exam_date: '',
+    name: "",
+    exam_date: "",
     difficulty: 3,
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (subject) {
       setFormData({
-        name: subject.name || '',
-        exam_date: subject.exam_date || '',
+        name: subject.name || "",
+        exam_date: subject.exam_date || "",
         difficulty: subject.difficulty || 3,
       });
     }
@@ -32,17 +33,18 @@ const SubjectModal = ({ subject, onSave, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await onSave(formData);
     } catch (err) {
-      console.error('Save error:', err);
-      const message = err.response?.data?.detail ||
-                      err.response?.data?.name?.[0] ||
-                      err.response?.data?.exam_date?.[0] ||
-                      'Failed to save subject. Please try again.';
+      console.error("Save error:", err);
+      const message =
+        err.response?.data?.detail ||
+        err.response?.data?.name?.[0] ||
+        err.response?.data?.exam_date?.[0] ||
+        "Failed to save subject. Please try again.";
       setError(message);
     } finally {
       setLoading(false);
@@ -50,61 +52,59 @@ const SubjectModal = ({ subject, onSave, onClose }) => {
   };
 
   const getDifficultyLabel = (level) => {
-    const labels = ['', 'Easy', 'Medium', 'Moderate', 'Hard', 'Very Hard'];
+    const labels = ["", "Easy", "Medium", "Moderate", "Hard", "Very Hard"];
     return labels[level] || 'Unknown';
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-xl rounded-2xl border border-ss-border bg-ss-bg p-6 shadow-soft sm:p-8"
+    <div className="glass-overlay fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <Card
+        elevated
+        className="w-full max-w-xl !p-6 sm:!p-8"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={subject ? 'Edit subject' : 'Add new subject'}
+        aria-label={subject ? "Edit subject" : "Add new subject"}
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="m-0 text-2xl font-semibold text-ss-highlight">{subject ? 'Edit subject' : 'Add subject'}</h2>
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-ss-border bg-ss-surface/40 text-lg text-ss-muted hover:text-ss-highlight"
+          <Button
+            className="h-10 w-10 !p-0 text-ss-neutral-300 hover:text-ss-neutral-100"
             onClick={onClose}
             type="button"
+            variant="ghost"
             aria-label="Close dialog"
           >
             X
-          </button>
+          </Button>
         </div>
 
-        {error ? (
-          <div className="mb-4">
-            <AlertMessage variant="error">{error}</AlertMessage>
-          </div>
-        ) : null}
+        {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-5">
           <InputField
-              type="text"
-              id="name"
-              label="Subject name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="Example: Mathematics"
-            />
+            type="text"
+            id="name"
+            label="Subject name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            placeholder="Example: Mathematics"
+          />
 
           <InputField
-              type="date"
-              id="exam_date"
-              label="Exam date"
-              name="exam_date"
-              value={formData.exam_date}
-              onChange={handleChange}
-              required
-            />
+            type="date"
+            id="exam_date"
+            label="Exam date"
+            name="exam_date"
+            value={formData.exam_date}
+            onChange={handleChange}
+            required
+          />
 
-          <div className="space-y-2">
-            <label htmlFor="difficulty" className="text-sm font-medium text-ss-highlight">
+          <div className="space-y-3 rounded-[18px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+            <label htmlFor="difficulty" className="text-sm font-semibold tracking-wide text-ss-highlight">
               Difficulty: {getDifficultyLabel(formData.difficulty)}
             </label>
             <input
@@ -115,7 +115,7 @@ const SubjectModal = ({ subject, onSave, onClose }) => {
               max="5"
               value={formData.difficulty}
               onChange={handleChange}
-              className="w-full accent-ss-accent"
+              className="h-2 w-full appearance-none rounded-full bg-[rgba(255,255,255,0.08)] accent-ss-accent"
               aria-label="Difficulty level"
             />
             <div className="flex justify-between text-xs text-ss-muted">
@@ -133,7 +133,7 @@ const SubjectModal = ({ subject, onSave, onClose }) => {
             </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 };

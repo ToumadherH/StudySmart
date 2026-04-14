@@ -20,9 +20,7 @@ const InputField = ({
         id={id}
         aria-invalid={error ? "true" : "false"}
         className={[
-          "w-full rounded-xl border border-ss-border/85 bg-ss-bg-soft/55 px-4 py-4 text-sm text-ss-neutral-100 placeholder:text-ss-neutral-400",
-          "transition-all duration-200 focus:border-ss-accent-bright focus:bg-ss-surface/35 focus:outline-none focus:ring-2 focus:ring-ss-accent/80",
-          error ? "border-ss-danger focus:border-ss-danger focus:ring-ss-danger/70" : "",
+          "glass-control px-4 py-4 text-sm text-ss-neutral-100 placeholder:text-ss-neutral-400",
           className,
         ]
           .filter(Boolean)

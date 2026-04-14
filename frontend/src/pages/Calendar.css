@@ -3,10 +3,12 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #116556;
-  border-radius: 12px;
-  background: rgba(0, 73, 58, 0.45);
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  color: #334155;
 }
 
 .legend-item {
@@ -14,7 +16,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #8cb6ab;
+  color: #334155;
 }
 
 .legend-color {
@@ -36,48 +38,53 @@
 }
 
 .calendar-container {
-  background: transparent;
-  border-radius: 12px;
-  padding: 0.25rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
 .fc {
   font-family: inherit;
-  color: #edf5f0;
+  color: #1e293b;
 }
 
 .fc .fc-toolbar-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #d7d7a8;
+  color: #0f172a;
 }
 
 .fc .fc-button {
-  background: rgba(0, 73, 58, 0.75);
-  border-color: #116556;
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 999px;
+  color: #1e293b;
   font-weight: 500;
   text-transform: capitalize;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .fc .fc-button:hover {
-  background: rgba(0, 163, 133, 0.3);
-  border-color: #00a385;
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.55);
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active,
 .fc .fc-button-primary:not(:disabled):active {
-  background: #00a385;
-  border-color: #00a385;
-  color: #001f17;
+  background: rgba(0, 163, 133, 0.14);
+  border-color: rgba(0, 163, 133, 0.38);
+  color: #0f172a;
 }
 
 .fc .fc-daygrid-day-number {
-  color: #edf5f0;
+  color: #334155;
   font-weight: 500;
 }
 
 .fc .fc-day-today {
-  background: rgba(215, 215, 168, 0.08) !important;
+  background: rgba(191, 219, 254, 0.3) !important;
 }
 
 .fc .fc-event {
@@ -94,16 +101,16 @@
 .fc .fc-scrollgrid,
 .fc .fc-theme-standard td,
 .fc .fc-theme-standard th {
-  border-color: #116556;
+  border-color: rgba(226, 232, 240, 0.9);
 }
 
 .fc .fc-col-header-cell-cushion,
 .fc .fc-daygrid-day-number {
-  color: #8cb6ab;
+  color: #475569;
 }
 
 .fc .fc-daygrid-day.fc-day-other {
-  background: rgba(0, 0, 0, 0.08);
+  background: #f8fafc;
 }
 
 .event-modal-overlay {
@@ -112,22 +119,26 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(1, 12, 9, 0.68);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .event-modal {
-  background: #001f17;
-  border: 1px solid #116556;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
   width: 100%;
   max-width: 430px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   animation: modalSlideIn 0.18s ease-out;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @keyframes modalSlideIn {
@@ -146,7 +157,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #116556;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .event-modal-header h3 {
@@ -157,19 +168,21 @@
 }
 
 .close-btn {
-  background: rgba(0, 73, 58, 0.45);
-  border: 1px solid #116556;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
   width: 36px;
   height: 36px;
   font-size: 0.95rem;
-  color: #8cb6ab;
+  color: #c2d2cb;
   cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .close-btn:hover {
-  color: #d7d7a8;
-  background: rgba(0, 163, 133, 0.2);
+  color: #edf5f0;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .event-modal-body {
@@ -179,7 +192,7 @@
 .event-modal-body p {
   margin: 0 0 0.7rem;
   font-size: 0.875rem;
-  color: #8cb6ab;
+  color: #c2d2cb;
 }
 
 .event-modal-body p:last-child {
@@ -202,7 +215,7 @@
 
 .event-modal-footer {
   padding: 0.9rem 1.25rem 1.1rem;
-  border-top: 1px solid #116556;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 @media (max-width: 768px) {

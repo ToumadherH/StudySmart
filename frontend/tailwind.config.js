@@ -47,10 +47,14 @@ export default {
       boxShadow: {
         soft: "0 10px 30px rgba(0, 31, 23, 0.2)",
         focus: "0 0 0 3px rgba(0, 163, 133, 0.35)",
+        glass: "0 8px 32px rgba(0, 0, 0, 0.3)",
+        "glass-strong": "0 14px 40px rgba(0, 0, 0, 0.36)",
       },
       borderRadius: {
         xl: "12px",
-        "2xl": "16px",
+        "2xl": "20px",
+        "3xl": "24px",
+        glass: "20px",
       },
       spacing: {
         18: "4.5rem",

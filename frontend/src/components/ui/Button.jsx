@@ -1,15 +1,15 @@
 const baseClasses =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border font-semibold tracking-wide transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ss-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ss-bg";
+  "inline-flex min-h-11 items-center justify-center rounded-xl border font-semibold tracking-wide transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ss-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ss-bg backdrop-blur-md";
 
 const variantClasses = {
   primary:
-    "border-ss-accent bg-ss-accent text-ss-bg shadow-soft hover:border-ss-accent-bright hover:bg-ss-accent-bright hover:shadow-lg hover:shadow-ss-accent/25 active:translate-y-px disabled:border-ss-border disabled:bg-ss-border disabled:text-ss-muted",
+    "border-ss-accent/60 bg-[rgba(0,163,133,0.18)] text-ss-highlight shadow-glass hover:border-ss-accent-bright hover:bg-[rgba(0,163,133,0.28)] hover:shadow-glass-strong active:translate-y-px disabled:border-ss-border disabled:bg-[rgba(255,255,255,0.05)] disabled:text-ss-muted",
   secondary:
-    "border-ss-border bg-ss-surface/25 text-ss-neutral-200 hover:bg-ss-surface-soft/45 hover:text-ss-neutral-100 active:translate-y-px disabled:bg-ss-surface/20 disabled:text-ss-muted",
+    "border-white/10 bg-[rgba(255,255,255,0.05)] text-ss-neutral-200 hover:border-white/15 hover:bg-[rgba(255,255,255,0.08)] hover:text-ss-neutral-100 active:translate-y-px disabled:bg-[rgba(255,255,255,0.03)] disabled:text-ss-muted",
   ghost:
-    "border-transparent bg-transparent text-ss-neutral-300 hover:border-ss-border/70 hover:bg-ss-surface-soft/30 hover:text-ss-neutral-100 active:translate-y-px disabled:text-ss-muted/70",
+    "border-transparent bg-transparent text-ss-neutral-300 hover:border-white/10 hover:bg-[rgba(255,255,255,0.05)] hover:text-ss-neutral-100 active:translate-y-px disabled:text-ss-muted/70",
   danger:
-    "border-ss-danger bg-ss-danger text-ss-highlight hover:brightness-110 hover:shadow-lg hover:shadow-ss-danger/20 active:translate-y-px disabled:border-ss-border disabled:bg-ss-border disabled:text-ss-muted",
+    "border-ss-danger/60 bg-[rgba(209,102,102,0.18)] text-ss-highlight hover:border-ss-danger hover:bg-[rgba(209,102,102,0.26)] hover:shadow-glass-strong active:translate-y-px disabled:border-ss-border disabled:bg-[rgba(255,255,255,0.05)] disabled:text-ss-muted",
 };
 
 const sizeClasses = {

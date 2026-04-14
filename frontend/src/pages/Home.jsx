@@ -1,10 +1,8 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
+import { useAuth } from '../context/AuthContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 
 const Home = () => {
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
@@ -12,19 +10,18 @@ const Home = () => {
   };
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 py-8">
-      <Card elevated className="w-full max-w-2xl p-8 text-center sm:p-10">
-        <h1 className="text-3xl font-bold text-ss-highlight sm:text-4xl">Welcome to StudySmart</h1>
-        <p className="mt-4 text-sm text-ss-muted">
-          Hello, <span className="font-semibold text-ss-text">{user?.username || "User"}</span>. Your workspace is ready.
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <Card elevated className="w-full max-w-lg !p-8 text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-ss-highlight">Welcome to StudySmart</h1>
+        <p className="mt-4 text-base text-ss-neutral-300">
+          Hello, <strong className="text-ss-neutral-100">{user?.username || 'User'}</strong>!
         </p>
-        <p className="mt-2 text-sm text-ss-muted">
-          Continue with subjects, planning, and calendar views to organize your next exam cycle.
+        <p className="mt-3 text-sm leading-relaxed text-ss-muted">
+          You are successfully logged in. This is a protected route.
         </p>
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button variant="primary" onClick={() => navigate("/dashboard")}>Go to dashboard</Button>
-          <Button variant="secondary" onClick={handleLogout}>Sign out</Button>
-        </div>
+        <Button onClick={handleLogout} className="mt-6">
+          Logout
+        </Button>
       </Card>
     </div>
   );
