@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { AlertMessage, EmptyState, LoadingState } from "../components/ui/Feedback";
 import SubjectCard from "../components/SubjectCard";
 import SubjectModal from "../components/SubjectModal";
-import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import { AlertMessage, EmptyState, LoadingState } from "../components/ui/Feedback";
 
 const Subjects = () => {
   const [subjects, setSubjects] = useState([]);
@@ -41,14 +41,15 @@ const Subjects = () => {
   };
 
   const handleDeleteSubject = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this subject?")) return;
+    if (!window.confirm("Are you sure you want to delete this subject?"))
+      return;
 
     try {
       await api.delete(`/subjects/${id}/`);
-      setSubjects(subjects.filter((s) => s.id !== id));
+      setSubjects((current) => current.filter((subject) => subject.id !== id));
     } catch (err) {
       console.error("Failed to delete subject:", err);
-      setError("Failed to delete subject.");
+      setError("Failed to delete subject");
     }
   };
 
@@ -59,12 +60,12 @@ const Subjects = () => {
           `/subjects/${editingSubject.id}/`,
           subjectData,
         );
-        setSubjects(
-          subjects.map((s) => (s.id === editingSubject.id ? response.data : s)),
+        setSubjects((current) =>
+          current.map((subject) => (subject.id === editingSubject.id ? response.data : subject)),
         );
       } else {
         const response = await api.post("/subjects/", subjectData);
-        setSubjects([...subjects, response.data]);
+        setSubjects((current) => [...current, response.data]);
       }
       setIsModalOpen(false);
       setEditingSubject(null);
@@ -75,36 +76,40 @@ const Subjects = () => {
   };
 
   if (loading) {
-    return <LoadingState title="Loading subjects" description="Fetching your existing subjects and exam dates." />;
+    return <LoadingState title="Loading subjects" description="Collecting your subject library and exam dates." />;
   }
 
   return (
     <div className="page-shell">
       <header className="page-header">
-        <h1 className="page-title">Subjects</h1>
-        <p className="page-subtitle">Manage exam timelines and difficulty levels to drive planning quality.</p>
+        <h1 className="page-title">My Subjects</h1>
+        <p className="page-subtitle">Manage your study subjects, exam dates, and planning priorities from one glass workspace.</p>
       </header>
 
       {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
 
-      <Card elevated className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="m-0 text-lg font-semibold text-ss-highlight">
-          {subjects.length} subject{subjects.length !== 1 ? "s" : ""}
-        </h2>
-        <Button variant="primary" onClick={handleAddSubject}>
-          Add subject
-        </Button>
+      <Card elevated className="flex flex-col gap-4 !p-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-ss-muted">Subject library</p>
+          <h2 className="mt-2 text-2xl font-semibold text-ss-highlight">
+            {subjects.length} Subject{subjects.length !== 1 ? "s" : ""}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-ss-muted">
+            Keep each subject in a transparent glass card with exam urgency and progress at a glance.
+          </p>
+        </div>
+        <Button onClick={handleAddSubject}>+ Add Subject</Button>
       </Card>
 
       {subjects.length === 0 ? (
         <EmptyState
-          title="No subjects found"
-          description="Start by adding a subject with exam date and difficulty. Planning sessions will be generated from this data."
-          actionLabel="Add first subject"
+          title="No subjects yet"
+          description="Add your first subject to get started with planning and exam tracking."
+          actionLabel="Add your first subject"
           onAction={handleAddSubject}
         />
       ) : (
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Subjects list">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {subjects.map((subject) => (
             <SubjectCard
               key={subject.id}
@@ -113,7 +118,7 @@ const Subjects = () => {
               onDelete={handleDeleteSubject}
             />
           ))}
-        </section>
+        </div>
       )}
 
       {isModalOpen && (

@@ -106,7 +106,7 @@ const Dashboard = () => {
       {subjects.length > 0 ? (
         <>
           <section className="grid grid-cols-1 gap-4 xl:grid-cols-2" aria-label="Exam and progress panels">
-            <Card elevated>
+            <Card elevated className="space-y-4 !p-6">
               <h2 className="mb-4 text-xl font-semibold text-ss-highlight">Upcoming exams</h2>
               <div className="space-y-3">
                 {subjects
@@ -116,7 +116,7 @@ const Dashboard = () => {
                   .map((subject) => (
                     <div
                       key={subject.id}
-                      className="rounded-xl border border-ss-border bg-ss-surface/35 px-4 py-3"
+                      className="glass-surface px-4 py-3"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <h3 className="m-0 text-base font-semibold text-ss-text">{subject.name}</h3>
@@ -137,16 +137,16 @@ const Dashboard = () => {
               </div>
             </Card>
 
-            <Card elevated>
+            <Card elevated className="space-y-4 !p-6">
               <h2 className="mb-4 text-xl font-semibold text-ss-highlight">Progress by subject</h2>
               <div className="space-y-3">
                 {subjects.map((subject) => (
-                  <div key={subject.id} className="rounded-xl border border-ss-border bg-ss-surface/35 px-4 py-3">
+                  <div key={subject.id} className="glass-surface px-4 py-3">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <h3 className="m-0 text-sm font-semibold text-ss-text">{subject.name}</h3>
                       <span className="text-xs text-ss-muted">{getDifficultyLabel(subject.difficulty)}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-ss-bg">
+                    <div className="h-2 rounded-full bg-[rgba(255,255,255,0.06)]">
                       <div
                         className="h-2 rounded-full bg-ss-accent transition-all duration-300"
                         style={{ width: `${getProgress(subject)}%` }}

@@ -6,7 +6,12 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <LoadingState title="Authenticating" description="Checking your session and permissions." />;
+    return (
+      <LoadingState
+        title="Authenticating"
+        description="Checking your session and permissions."
+      />
+    );
   }
 
   if (!isAuthenticated) {
