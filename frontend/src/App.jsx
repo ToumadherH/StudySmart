@@ -4,7 +4,9 @@ import {
   Route,
   Navigate,
   Outlet,
+  useLocation,
 } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -49,10 +51,26 @@ function ProtectedLayout() {
   );
 }
 
+function BodyBackgroundRouteManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const isLoginPage = location.pathname === "/login";
+    document.body.classList.toggle("login-page", isLoginPage);
+
+    return () => {
+      document.body.classList.remove("login-page");
+    };
+  }, [location.pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <BodyBackgroundRouteManager />
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />

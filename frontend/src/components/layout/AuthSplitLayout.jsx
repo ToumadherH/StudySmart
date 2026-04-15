@@ -32,7 +32,7 @@ const AuthSplitLayout = ({
         />
         <div className="absolute inset-0 bg-gradient-to-br from-ss-bg/85 via-ss-bg/55 to-ss-surface/65" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(88,212,188,0.22),transparent_45%)]" />
-        <div className="absolute bottom-0 left-0 right-0 p-10 xl:p-14">
+        <div className="absolute top-0 left-0 right-0 p-10 xl:p-14">
           <h2 className="text-3xl font-semibold leading-tight text-ss-neutral-100 xl:text-4xl">
             {mediaTitle}
           </h2>
