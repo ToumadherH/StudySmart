@@ -14,6 +14,35 @@ class SessionViewSet(viewsets.ModelViewSet):
     serializer_class = SessionSerializer
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _to_local_date(datetime_value):
+        if timezone.is_aware(datetime_value):
+            return timezone.localtime(datetime_value).date()
+        return datetime_value.date()
+
+    def _is_future_session(self, session):
+        return self._to_local_date(session.start_time) > timezone.localdate()
+
+    @staticmethod
+    def _is_truthy(value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {'true', '1', 'yes', 'on'}
+        return bool(value)
+
+    def _is_completion_attempt(self, data):
+        status_value = data.get('status') if hasattr(data, 'get') else None
+        completed_value = data.get('completed') if hasattr(data, 'get') else None
+        return status_value == 'completed' or self._is_truthy(completed_value) is True
+
+    @staticmethod
+    def _future_completion_response():
+        return Response(
+            {'error': 'You cannot complete a future session'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     def _get_dashboard_stats_data(self):
         stats = get_dashboard_stats(self.request.user)
         return DashboardStatsSerializer(stats).data
@@ -31,6 +60,9 @@ class SessionViewSet(viewsets.ModelViewSet):
     def mark_complete(self, request, pk=None):
         """Mark a session as completed"""
         session = self.get_object()
+        if self._is_future_session(session):
+            return self._future_completion_response()
+
         session.status = 'completed'
         session.completed = True
         session.save(update_fields=['status', 'completed', 'updated_at'])
@@ -39,7 +71,21 @@ class SessionViewSet(viewsets.ModelViewSet):
         response_data['dashboard_stats'] = self._get_dashboard_stats_data()
         return Response(response_data)
 
+    def update(self, request, *args, **kwargs):
+        session = self.get_object()
+        if self._is_completion_attempt(request.data) and self._is_future_session(session):
+            return self._future_completion_response()
+
+        response = super().update(request, *args, **kwargs)
+        if response.status_code < 400 and ('status' in request.data or 'completed' in request.data):
+            response.data['dashboard_stats'] = self._get_dashboard_stats_data()
+        return response
+
     def partial_update(self, request, *args, **kwargs):
+        session = self.get_object()
+        if self._is_completion_attempt(request.data) and self._is_future_session(session):
+            return self._future_completion_response()
+
         response = super().partial_update(request, *args, **kwargs)
         if response.status_code < 400 and ('status' in request.data or 'completed' in request.data):
             response.data['dashboard_stats'] = self._get_dashboard_stats_data()

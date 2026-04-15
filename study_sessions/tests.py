@@ -22,12 +22,15 @@ class SessionProgressFlowTests(APITestCase):
             owner=self.user,
         )
 
-        self.session = Session.objects.create(
+        self.session = self._create_session(day_offset=0)
+
+    def _create_session(self, *, day_offset=0, status="planned"):
+        return Session.objects.create(
             subject=self.subject,
             user=self.user,
-            start_time=timezone.now() + timedelta(days=1),
+            start_time=timezone.now() + timedelta(days=day_offset),
             duration_minutes=90,
-            status="planned",
+            status=status,
         )
 
     def test_patch_status_returns_updated_dashboard_stats(self):
@@ -59,6 +62,42 @@ class SessionProgressFlowTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "completed")
         self.assertTrue(response.data["completed"])
+
+    def test_patch_allows_completing_past_session(self):
+        past_session = self._create_session(day_offset=-1)
+        url = reverse("session-detail", args=[past_session.id])
+
+        response = self.client.patch(url, {"status": "completed"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "completed")
+        self.assertTrue(response.data["completed"])
+
+    def test_patch_rejects_completing_future_session(self):
+        future_session = self._create_session(day_offset=1)
+        url = reverse("session-detail", args=[future_session.id])
+
+        response = self.client.patch(url, {"status": "completed"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "You cannot complete a future session")
+
+        future_session.refresh_from_db()
+        self.assertEqual(future_session.status, "planned")
+        self.assertFalse(future_session.completed)
+
+    def test_mark_complete_rejects_future_session(self):
+        future_session = self._create_session(day_offset=1)
+        url = reverse("session-mark-complete", args=[future_session.id])
+
+        response = self.client.post(url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "You cannot complete a future session")
+
+        future_session.refresh_from_db()
+        self.assertEqual(future_session.status, "planned")
+        self.assertFalse(future_session.completed)
 
     def test_subject_endpoint_exposes_session_aggregates(self):
         Session.objects.create(

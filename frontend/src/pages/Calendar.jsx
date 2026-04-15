@@ -35,6 +35,30 @@ const normalizeDate = (value) => {
   return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 };
 
+const toLocalDayStart = (value) => {
+  const normalizedDate = normalizeDate(value);
+  if (!normalizedDate) {
+    return null;
+  }
+
+  return new Date(
+    normalizedDate.getFullYear(),
+    normalizedDate.getMonth(),
+    normalizedDate.getDate(),
+  );
+};
+
+const isFutureSessionDate = (value) => {
+  const sessionLocalDate = toLocalDayStart(value);
+  if (!sessionLocalDate) {
+    return false;
+  }
+
+  const now = new Date();
+  const todayLocalDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return sessionLocalDate > todayLocalDate;
+};
+
 const mapSessionToEvent = (session) => {
   if (!session?.id || !session?.start_time) {
     return null;
@@ -128,12 +152,18 @@ const Calendar = () => {
   const handleToggleComplete = async () => {
     if (!selectedEvent || selectedEvent.type !== "session") return;
 
+    const newStatus =
+      selectedEvent.status === "completed" ? "planned" : "completed";
+
+    if (newStatus === "completed" && isFutureSessionDate(selectedEvent.start)) {
+      window.alert("You cannot complete a future session");
+      return;
+    }
+
     setStatusUpdating(true);
     setError("");
 
     try {
-      const newStatus =
-        selectedEvent.status === "completed" ? "planned" : "completed";
       const response = await api.patch(`/sessions/${selectedEvent.sessionId}/`, {
         status: newStatus,
       });
@@ -165,6 +195,9 @@ const Calendar = () => {
 
   const selectedStart = normalizeDate(selectedEvent?.start);
   const selectedEnd = normalizeDate(selectedEvent?.end);
+  const selectedSessionIsFuture =
+    selectedEvent?.type === "session" && isFutureSessionDate(selectedEvent?.start);
+  const completionBlocked = selectedSessionIsFuture && selectedEvent?.status !== "completed";
 
   if (loading) {
     return <LoadingState title="Loading calendar" description="Gathering sessions and exam events." />;
@@ -272,14 +305,20 @@ const Calendar = () => {
                   </span>
                 </p>
               )}
+              {completionBlocked ? (
+                <p className="future-session-hint" title="Available on session date">
+                  Available on session date
+                </p>
+              ) : null}
             </div>
             {selectedEvent.type === "session" && (
               <div className="event-modal-footer">
                 <Button
-                  className={`toggle-btn ${selectedEvent.status === "completed" ? "mark-incomplete" : "mark-complete"}`}
+                  className={`toggle-btn ${selectedEvent.status === "completed" ? "mark-incomplete" : "mark-complete"} ${completionBlocked ? "toggle-btn--blocked" : ""}`}
                   onClick={handleToggleComplete}
                   variant={selectedEvent.status === "completed" ? "secondary" : "primary"}
-                  disabled={statusUpdating}
+                  disabled={statusUpdating || completionBlocked}
+                  title={completionBlocked ? "Available on session date" : undefined}
                 >
                   {statusUpdating
                     ? "Updating..."
