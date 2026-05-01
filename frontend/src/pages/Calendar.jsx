@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -35,28 +35,13 @@ const normalizeDate = (value) => {
   return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 };
 
-const toLocalDayStart = (value) => {
-  const normalizedDate = normalizeDate(value);
-  if (!normalizedDate) {
-    return null;
-  }
-
-  return new Date(
-    normalizedDate.getFullYear(),
-    normalizedDate.getMonth(),
-    normalizedDate.getDate(),
-  );
-};
-
 const isFutureSessionDate = (value) => {
-  const sessionLocalDate = toLocalDayStart(value);
-  if (!sessionLocalDate) {
+  const sessionStart = normalizeDate(value);
+  if (!sessionStart) {
     return false;
   }
 
-  const now = new Date();
-  const todayLocalDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return sessionLocalDate > todayLocalDate;
+  return sessionStart.getTime() > Date.now();
 };
 
 const mapSessionToEvent = (session) => {
@@ -110,7 +95,9 @@ const Calendar = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const infoTimeoutRef = useRef(null);
 
   const fetchCalendarData = useCallback(async () => {
     try {
@@ -138,6 +125,24 @@ const Calendar = () => {
   useEffect(() => {
     fetchCalendarData();
   }, [fetchCalendarData]);
+
+  useEffect(() => {
+    return () => {
+      if (infoTimeoutRef.current) {
+        clearTimeout(infoTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showAdaptiveMessage = (message) => {
+    setInfoMessage(message);
+    if (infoTimeoutRef.current) {
+      clearTimeout(infoTimeoutRef.current);
+    }
+    infoTimeoutRef.current = setTimeout(() => {
+      setInfoMessage("");
+    }, 5000);
+  };
 
   const handleEventClick = (clickInfo) => {
     const { extendedProps } = clickInfo.event;
@@ -179,6 +184,19 @@ const Calendar = () => {
         completed: updatedStatus === "completed",
       });
 
+      if (newStatus === "completed") {
+        try {
+          const adaptiveResponse = await api.post("/planning/adapt/", {
+            trigger: "session_complete",
+          });
+          if (adaptiveResponse?.data?.message) {
+            showAdaptiveMessage(adaptiveResponse.data.message);
+          }
+        } catch (adaptiveError) {
+          console.error("Adaptive planning failed:", adaptiveError);
+        }
+      }
+
       await fetchCalendarData();
       setSelectedEvent(null);
     } catch (err) {
@@ -211,6 +229,7 @@ const Calendar = () => {
       </header>
 
       {error ? <AlertMessage variant="error">{error}</AlertMessage> : null}
+      {infoMessage ? <AlertMessage variant="success">{infoMessage}</AlertMessage> : null}
 
       <Card elevated>
         <div className="calendar-legend">

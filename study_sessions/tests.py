@@ -73,6 +73,25 @@ class SessionProgressFlowTests(APITestCase):
         self.assertEqual(response.data["status"], "completed")
         self.assertTrue(response.data["completed"])
 
+    def test_patch_rejects_completing_future_time_today(self):
+        future_session = Session.objects.create(
+            subject=self.subject,
+            user=self.user,
+            start_time=timezone.now() + timedelta(minutes=30),
+            duration_minutes=90,
+            status="planned",
+        )
+        url = reverse("session-detail", args=[future_session.id])
+
+        response = self.client.patch(url, {"status": "completed"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "You cannot complete a future session")
+
+        future_session.refresh_from_db()
+        self.assertEqual(future_session.status, "planned")
+        self.assertFalse(future_session.completed)
+
     def test_patch_rejects_completing_future_session(self):
         future_session = self._create_session(day_offset=1)
         url = reverse("session-detail", args=[future_session.id])
@@ -88,6 +107,25 @@ class SessionProgressFlowTests(APITestCase):
 
     def test_mark_complete_rejects_future_session(self):
         future_session = self._create_session(day_offset=1)
+        url = reverse("session-mark-complete", args=[future_session.id])
+
+        response = self.client.post(url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "You cannot complete a future session")
+
+        future_session.refresh_from_db()
+        self.assertEqual(future_session.status, "planned")
+        self.assertFalse(future_session.completed)
+
+    def test_mark_complete_rejects_future_time_today(self):
+        future_session = Session.objects.create(
+            subject=self.subject,
+            user=self.user,
+            start_time=timezone.now() + timedelta(minutes=30),
+            duration_minutes=60,
+            status="planned",
+        )
         url = reverse("session-mark-complete", args=[future_session.id])
 
         response = self.client.post(url, {}, format="json")

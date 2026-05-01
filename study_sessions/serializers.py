@@ -16,14 +16,14 @@ class SessionSerializer(serializers.ModelSerializer):
         return obj.start_time + timedelta(minutes=obj.duration_minutes)
 
     @staticmethod
-    def _to_local_date(datetime_value):
+    def _to_local_datetime(datetime_value):
         if datetime_value is None:
             return None
 
         if timezone.is_aware(datetime_value):
-            return timezone.localtime(datetime_value).date()
+            return timezone.localtime(datetime_value)
 
-        return datetime_value.date()
+        return datetime_value
 
     def validate(self, attrs):
         status_provided = 'status' in attrs
@@ -51,9 +51,13 @@ class SessionSerializer(serializers.ModelSerializer):
             target_start_time = self.instance.start_time
 
         if attempting_completion and target_start_time is not None:
-            session_date = self._to_local_date(target_start_time)
-            if session_date and session_date > timezone.localdate():
-                raise serializers.ValidationError({'error': 'You cannot complete a future session'})
+            session_start = self._to_local_datetime(target_start_time)
+            if session_start is not None:
+                now = timezone.localtime(timezone.now())
+                if timezone.is_naive(session_start):
+                    now = now.replace(tzinfo=None)
+                if session_start > now:
+                    raise serializers.ValidationError({'error': 'You cannot complete a future session'})
 
         return attrs
 
