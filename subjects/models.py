@@ -15,6 +15,7 @@ class Subject(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     exam_date = models.DateField()
+    course_pdf_text = models.TextField(blank=True, default="")
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subjects')
 
     # Course material used by the AI quiz generator. The PDF is uploaded by the
