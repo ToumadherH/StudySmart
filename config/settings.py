@@ -138,12 +138,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # so we reuse the OpenAI Python SDK with a custom base URL. Override the model
 # via env if you want to test a different one.
 import os as _os
+from pathlib import Path
 
-AI_GATEWAY_API_KEY = _os.environ.get('AI_GATEWAY_API_KEY', '')
-AI_GATEWAY_BASE_URL = _os.environ.get(
-    'AI_GATEWAY_BASE_URL', 'https://ai-gateway.vercel.sh/v1'
-)
-QUIZ_MODEL = _os.environ.get('QUIZ_MODEL', 'openai/gpt-5-mini')
+# Load .env file manually
+_env_path = BASE_DIR / '.env'
+if _env_path.exists():
+    with open(_env_path, 'r', encoding='utf-8') as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                _os.environ.setdefault(_k.strip(), _v.strip())
+# Use Groq API Key and Model by default if AI_PROVIDER is groq
+AI_GATEWAY_API_KEY = _os.environ.get('GROQ_API_KEY') or _os.environ.get('AI_GATEWAY_API_KEY', '')
+AI_GATEWAY_BASE_URL = _os.environ.get('AI_GATEWAY_BASE_URL', 'https://api.groq.com/openai/v1')
+QUIZ_MODEL = _os.environ.get('GROQ_MODEL') or _os.environ.get('QUIZ_MODEL', 'llama-3.1-8b-instant')
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
@@ -175,3 +184,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'chairetnouri808@gmail.com'
+EMAIL_HOST_PASSWORD = 'lyzw yikl jicv apcp'
