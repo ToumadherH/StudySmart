@@ -7,6 +7,7 @@ import api from "../services/api";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { AlertMessage, LoadingState } from "../components/ui/Feedback";
+import QuizModal from "../components/QuizModal";
 import { publishSessionProgressUpdated } from "../services/sessionSync";
 import "./Calendar.css";
 
@@ -92,11 +93,15 @@ const mapExamToEvent = (subject) => {
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
   const [statusUpdating, setStatusUpdating] = useState(false);
+  // Quiz modal is opened after a session is marked complete *and* the
+  // associated subject has a course PDF on file.
+  const [quizContext, setQuizContext] = useState(null);
   const infoTimeoutRef = useRef(null);
 
   const fetchCalendarData = useCallback(async () => {
@@ -115,6 +120,7 @@ const Calendar = () => {
       const examEvents = subjectsData.map(mapExamToEvent).filter(Boolean);
 
       setEvents([...sessionEvents, ...examEvents]);
+      setSubjects(subjectsData);
     } catch {
       setError("We could not load calendar data right now.");
     } finally {
@@ -195,6 +201,23 @@ const Calendar = () => {
         } catch (adaptiveError) {
           console.error("Adaptive planning failed:", adaptiveError);
         }
+
+        // Offer the AI quiz if the subject has a course PDF uploaded. We pull
+        // the subject from local state so we don't need an extra request.
+        const subjectIdForQuiz =
+          updatedSession.subject_id ||
+          updatedSession.subject?.id ||
+          selectedEvent.subjectId;
+        const subjectForQuiz = subjects.find(
+          (item) => item.id === subjectIdForQuiz,
+        );
+        if (subjectForQuiz?.has_course_pdf) {
+          setQuizContext({
+            subject: subjectForQuiz,
+            sessionId:
+              updatedSession.id || selectedEvent.sessionId || null,
+          });
+        }
       }
 
       await fetchCalendarData();
@@ -265,6 +288,14 @@ const Calendar = () => {
           />
         </div>
       </Card>
+
+      {quizContext ? (
+        <QuizModal
+          subject={quizContext.subject}
+          sessionId={quizContext.sessionId}
+          onClose={() => setQuizContext(null)}
+        />
+      ) : null}
 
       {selectedEvent && (
         <div className="event-modal-overlay" onClick={closeModal}>
