@@ -16,6 +16,7 @@ class Session(models.Model):
     duration_minutes = models.IntegerField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned')
     completed = models.BooleanField(default=False)
+    reminder_sent = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
