@@ -54,17 +54,25 @@ const Subjects = () => {
   };
 
   const handleSaveSubject = async (subjectData) => {
+    // SubjectModal always sends FormData so we can carry the optional course PDF.
+    // Letting the browser set the multipart boundary is critical here.
+    const config = {
+      headers: { "Content-Type": "multipart/form-data" },
+    };
     try {
       if (editingSubject) {
         const response = await api.patch(
           `/subjects/${editingSubject.id}/`,
           subjectData,
+          config,
         );
         setSubjects((current) =>
-          current.map((subject) => (subject.id === editingSubject.id ? response.data : subject)),
+          current.map((subject) =>
+            subject.id === editingSubject.id ? response.data : subject,
+          ),
         );
       } else {
-        const response = await api.post("/subjects/", subjectData);
+        const response = await api.post("/subjects/", subjectData, config);
         setSubjects((current) => [...current, response.data]);
       }
       setIsModalOpen(false);

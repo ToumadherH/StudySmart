@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'study_sessions',
     'notifications',
     'users',
+    'quizzes',
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,24 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (user uploads such as course PDFs)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Default field type for new auto-generated primary keys.
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# AI Gateway / LLM configuration. The Vercel AI Gateway is OpenAI-compatible,
+# so we reuse the OpenAI Python SDK with a custom base URL. Override the model
+# via env if you want to test a different one.
+import os as _os
+
+AI_GATEWAY_API_KEY = _os.environ.get('AI_GATEWAY_API_KEY', '')
+AI_GATEWAY_BASE_URL = _os.environ.get(
+    'AI_GATEWAY_BASE_URL', 'https://ai-gateway.vercel.sh/v1'
+)
+QUIZ_MODEL = _os.environ.get('QUIZ_MODEL', 'openai/gpt-5-mini')
 
 # REST Framework Configuration
 REST_FRAMEWORK = {

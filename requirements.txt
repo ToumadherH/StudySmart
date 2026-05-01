@@ -1,0 +1,12 @@
+# StudySmart backend dependencies.
+# Install with: pip install -r requirements.txt
+
+# Core
+Django>=5.0,<6.1
+djangorestframework>=3.15
+djangorestframework-simplejwt>=5.3
+django-cors-headers>=4.3
+
+# AI quiz feature
+openai>=1.40         # Used as the OpenAI-compatible client for the Vercel AI Gateway.
+pypdf>=4.2           # Extracts text from uploaded course PDFs.

@@ -62,6 +62,16 @@ const SubjectCard = ({ subject, onEdit, onDelete }) => {
             {daysRemaining > 0 ? `${daysRemaining} days` : 'Past due'}
           </span>
         </div>
+        <div className="flex items-center justify-between gap-3 rounded-[18px] border border-white/10 bg-[rgba(255,255,255,0.03)] px-4 py-3">
+          <span className="text-sm text-ss-neutral-300">Course PDF</span>
+          <span
+            className={`text-sm font-semibold ${
+              subject.has_course_pdf ? "text-ss-accent" : "text-ss-muted"
+            }`}
+          >
+            {subject.has_course_pdf ? "Ready for quiz" : "Not uploaded"}
+          </span>
+        </div>
       </div>
 
       <div className="mt-auto grid grid-cols-2 gap-3">

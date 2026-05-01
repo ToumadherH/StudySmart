@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -23,6 +25,7 @@ from subjects.views import SubjectViewSet
 from study_sessions.views import SessionViewSet
 from notifications.views import NotificationViewSet
 from planning.views import PlanningViewSet
+from quizzes.views import QuizViewSet
 from users.views import CustomTokenObtainPairView, RegisterView, UserViewSet
 
 router = DefaultRouter()
@@ -30,6 +33,7 @@ router.register(r'subjects', SubjectViewSet, basename='subject')
 router.register(r'sessions', SessionViewSet, basename='session')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'planning', PlanningViewSet, basename='planning')
+router.register(r'quizzes', QuizViewSet, basename='quiz')
 router.register(r'user', UserViewSet, basename='user')
 
 urlpatterns = [
@@ -39,6 +43,9 @@ urlpatterns = [
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 
