@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Prefetch, Count, Q
 from .models import Planning
 from .serializers import PlanningSerializer, GeneratedPlanningResponseSerializer, DashboardStatsSerializer
-from .services import generate_planning, get_dashboard_stats
+from .services import generate_planning, get_dashboard_stats, adjustFuturePlanning
 from study_sessions.models import Session
 
 
@@ -54,4 +54,29 @@ class PlanningViewSet(viewsets.ModelViewSet):
         return Response({
             'upcoming_exams': stats['upcoming_exams']
         })
+
+    @action(detail=False, methods=['post'])
+    def adapt(self, request):
+        """Adjust future planning based on missed sessions and performance"""
+        max_sessions_per_day = request.data.get('max_sessions_per_day', 3)
+        horizon_days = request.data.get('horizon_days', 14)
+
+        try:
+            max_sessions_per_day = int(max_sessions_per_day)
+        except (TypeError, ValueError):
+            max_sessions_per_day = 3
+
+        try:
+            horizon_days = int(horizon_days)
+        except (TypeError, ValueError):
+            horizon_days = 14
+
+        result = adjustFuturePlanning(
+            request.user,
+            max_sessions_per_day=max_sessions_per_day,
+            horizon_days=horizon_days,
+        )
+
+        status_code = status.HTTP_200_OK if result.get('success') else status.HTTP_400_BAD_REQUEST
+        return Response(result, status=status_code)
 
