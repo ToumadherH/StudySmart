@@ -33,7 +33,7 @@ class SessionViewSet(viewsets.ModelViewSet):
         now = timezone.localtime(timezone.now())
         if timezone.is_naive(session_start):
             now = now.replace(tzinfo=None)
-        return session_start > now
+        return session_start.date() > now.date()
 
     @staticmethod
     def _is_truthy(value):

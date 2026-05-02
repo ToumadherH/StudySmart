@@ -57,6 +57,17 @@ class SubjectSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("File must be a PDF.")
         return value
 
+    def create(self, validated_data):
+        validated_data.pop('remove_course_pdf', False)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        remove_pdf = validated_data.pop('remove_course_pdf', False)
+        if remove_pdf:
+            instance.course_pdf = None
+            instance.course_pdf_text = ''
+        return super().update(instance, validated_data)
+
     class Meta:
         model = Subject
         fields = [

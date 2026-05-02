@@ -42,7 +42,12 @@ const isFutureSessionDate = (value) => {
     return false;
   }
 
-  return sessionStart.getTime() > Date.now();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const sessionDate = new Date(sessionStart.getTime());
+  sessionDate.setHours(0, 0, 0, 0);
+
+  return sessionDate.getTime() > today.getTime();
 };
 
 const mapSessionToEvent = (session) => {

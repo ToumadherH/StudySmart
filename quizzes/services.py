@@ -25,7 +25,7 @@ PROMPT_PATH = Path(__file__).resolve().parent / "prompt_template.txt"
 # Cap how much course material we forward to the LLM per request. The PDF
 # extraction layer already truncates, but we keep an extra ceiling here in
 # case someone bypasses it.
-MAX_PDF_TEXT = 50_000
+MAX_PDF_TEXT = 12_000
 
 # Default question mix when the caller doesn't specify one.
 DEFAULT_QUESTION_TYPES = ["mcq", "true_false", "short_answer"]
