@@ -56,7 +56,7 @@ class SessionSerializer(serializers.ModelSerializer):
                 now = timezone.localtime(timezone.now())
                 if timezone.is_naive(session_start):
                     now = now.replace(tzinfo=None)
-                if session_start > now:
+                if session_start.date() > now.date():
                     raise serializers.ValidationError({'error': 'You cannot complete a future session'})
 
         return attrs

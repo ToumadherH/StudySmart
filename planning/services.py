@@ -85,7 +85,7 @@ def generate_planning(user, weeks=2, sessions_per_week=10, clear_existing=True):
 
         # Define available time slots (realistic study times)
         time_slots = [9, 10, 11, 13, 14, 15, 17, 18, 19]  # 9AM-11AM, 1PM-3PM, 5PM-7PM
-        weekdays = [0, 1, 2, 3, 4]  # Monday-Friday only
+        weekdays = [0, 1, 2, 3, 4, 5, 6]  # All week
 
         # Determine cutoff date: sessions must be BEFORE exam date
         exam_date = subject.exam_date
@@ -102,7 +102,7 @@ def generate_planning(user, weeks=2, sessions_per_week=10, clear_existing=True):
 
         while current_date.date() < cutoff_date.date():
             weekday = current_date.weekday()
-            if weekday in weekdays:  # Only weekdays
+            if weekday in weekdays:
                 for hour in time_slots:
                     slot_time = current_date.replace(hour=hour, minute=0, second=0)
                     if slot_time < cutoff_date:  # Must be before exam
@@ -179,7 +179,7 @@ def generate_sessions_for_subject(user, subject, weeks=2, sessions_per_week=2):
 
     # Define available time slots (realistic study times)
     time_slots = [9, 10, 11, 13, 14, 15, 17, 18, 19]  # 9AM-11AM, 1PM-3PM, 5PM-7PM
-    weekdays = [0, 1, 2, 3, 4]  # Monday-Friday only
+    weekdays = [0, 1, 2, 3, 4, 5, 6]  # All week
 
     base_date = timezone.now()
 
@@ -198,7 +198,7 @@ def generate_sessions_for_subject(user, subject, weeks=2, sessions_per_week=2):
 
     while current_date.date() < cutoff_date.date():
         weekday = current_date.weekday()
-        if weekday in weekdays:  # Only weekdays
+        if weekday in weekdays:
             for hour in time_slots:
                 slot_time = current_date.replace(hour=hour, minute=0, second=0)
                 if slot_time < cutoff_date:  # Must be before exam
@@ -306,7 +306,7 @@ def get_dashboard_stats(user):
 
 
 DEFAULT_TIME_SLOTS = [9, 10, 11, 13, 14, 15, 17, 18, 19]
-DEFAULT_WEEKDAYS = {0, 1, 2, 3, 4}
+DEFAULT_WEEKDAYS = {0, 1, 2, 3, 4, 5, 6}
 
 
 def getMissedSessions(user):
